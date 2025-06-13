@@ -1,19 +1,19 @@
 {
-  "name": "@playwright/mcp",
+  "name": "playwright-mcp-advanced",
   "version": "0.0.29",
   "description": "Advanced Playwright Tools for MCP",
   "keywords": ["playwright", "mcp", "tools"],
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/microsoft/playwright-mcp.git"
+    "url": "git+https://github.com/viktor-silakov/playwright-mcp-advanced.git"
   },
-  "homepage": "https://playwright.dev",
+  "homepage": "https://github.com/viktor-silakov/playwright-mcp-advanced",
   "engines": {
     "node": ">=18"
   },
   "author": {
-    "name": "Microsoft Corporation"
+    "name": "Viktor Silakov"
   },
   "license": "Apache-2.0",
   "scripts": {
