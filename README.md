@@ -36,11 +36,27 @@ This advanced version includes additional capabilities not available in the orig
 - **Parallel execution** - Multiple operations execute simultaneously for better performance
 - **Smart validation** - Prevents conflicting parameter combinations
 - **Flexible locators** - Support for any Playwright locator syntax
+- **Multiple element handling** - When a single locator finds multiple elements, returns data for each element
 - **Developer-friendly** - Clear error messages and formatted output
+- **Vision mode compatibility** - All HTML extraction tools work in both snapshot and vision modes
 
 ### Requirements
 - Node.js 18 or newer
 - VS Code, Cursor, Windsurf, Claude Desktop or any other MCP client
+
+### Local Development Setup
+
+To use this advanced version locally:
+
+1. **Clone and build the project:**
+   ```bash
+   git clone <repository-url>
+   cd playwright-mcp-advanced
+   npm install
+   npm run build
+   ```
+
+2. **Configure your MCP client** to use the local build (see configuration examples below)
 
 <!--
 // Generate using:
@@ -49,8 +65,9 @@ node utils/generate-links.js
 
 ### Getting started
 
-First, install the Playwright MCP server with your client. A typical configuration looks like this:
+First, install the Playwright MCP server with your client. 
 
+#### For the original Playwright MCP:
 ```js
 {
   "mcpServers": {
@@ -58,6 +75,20 @@ First, install the Playwright MCP server with your client. A typical configurati
       "command": "npx",
       "args": [
         "@playwright/mcp@latest"
+      ]
+    }
+  }
+}
+```
+
+#### For this advanced version (local development):
+```js
+{
+  "mcpServers": {
+    "playwright-advanced": {
+      "command": "node",
+      "args": [
+        "/path/to/playwright-mcp-advanced/dist/index.js"
       ]
     }
   }
@@ -82,13 +113,11 @@ After installation, the Playwright MCP server will be available for use with you
 <details>
 <summary><b>Install in Cursor</b></summary>
 
-#### Click the button to install:
+#### For original Playwright MCP:
 
 [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=playwright&config=eyJjb21tYW5kIjoibnB4IEBwbGF5d3JpZ2h0L21jcEBsYXRlc3QifQ%3D%3D)
 
-#### Or install manually:
-
-Go to `Cursor Settings` -> `MCP` -> `Add new MCP Server`. Name to your liking, use `command` type with the command `npx @playwright/mcp`. You can also verify config or add command like arguments via clicking `Edit`.
+Or install manually: Go to `Cursor Settings` -> `MCP` -> `Add new MCP Server`. Name to your liking, use `command` type with the command `npx @playwright/mcp`.
 
 ```js
 {
@@ -97,6 +126,23 @@ Go to `Cursor Settings` -> `MCP` -> `Add new MCP Server`. Name to your liking, u
       "command": "npx",
       "args": [
         "@playwright/mcp@latest"
+      ]
+    }
+  }
+}
+```
+
+#### For this advanced version (local):
+
+Go to `Cursor Settings` -> `MCP` -> `Add new MCP Server`. Use the following configuration:
+
+```js
+{
+  "mcpServers": {
+    "playwright-advanced": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/playwright-mcp-advanced/dist/index.js"
       ]
     }
   }
@@ -126,8 +172,9 @@ Follow Windsuff MCP [documentation](https://docs.windsurf.com/windsurf/cascade/m
 <details>
 <summary><b>Install in Claude Desktop</b></summary>
 
-Follow the MCP install [guide](https://modelcontextprotocol.io/quickstart/user), use following configuration:
+Follow the MCP install [guide](https://modelcontextprotocol.io/quickstart/user).
 
+#### For original Playwright MCP:
 ```js
 {
   "mcpServers": {
@@ -135,6 +182,20 @@ Follow the MCP install [guide](https://modelcontextprotocol.io/quickstart/user),
       "command": "npx",
       "args": [
         "@playwright/mcp@latest"
+      ]
+    }
+  }
+}
+```
+
+#### For this advanced version (local):
+```js
+{
+  "mcpServers": {
+    "playwright-advanced": {
+      "command": "node",
+      "args": [
+        "/absolute/path/to/playwright-mcp-advanced/dist/index.js"
       ]
     }
   }
@@ -445,6 +506,8 @@ To use Vision Mode, add the `--vision` flag when starting the server:
 Vision Mode works best with the computer use models that are able to interact with elements using
 X Y coordinate space, based on the provided screenshot.
 
+**Note:** All HTML content extraction tools (`browser_get_html_content`, `browser_get_outer_html`) are also available in Vision Mode, providing the same functionality regardless of the mode used.
+
 ## 🚀 Advanced Tools
 
 This section documents the additional and enhanced tools available in this advanced version:
@@ -494,6 +557,10 @@ The `browser_screen_capture` tool has been enhanced with additional capabilities
 
 // Multiple elements screenshot
 { locators: [".navbar", "#content", ".footer"] }
+
+// Single locator finding multiple elements
+// If locator ".product" finds 4 elements, takes 4 separate screenshots
+{ locator: ".product" }
 ```
 
 </details>
@@ -532,7 +599,13 @@ The `browser_screen_capture` tool has been enhanced with additional capabilities
 
 // Get outerHTML (including the element tag)
 { locator: "button.submit" }
+
+// Single locator finding multiple elements
+// If locator ".item" finds 3 elements, returns array with 3 HTML contents
+{ locator: ".item" }
 ```
+
+**Note:** When a single locator matches multiple elements, the tool returns an array containing the HTML content of each matched element.
 
 </details>
 
@@ -562,6 +635,10 @@ The `browser_screen_capture` tool has been enhanced with additional capabilities
 
 // Multiple elements snapshot
 { locators: [".navbar", "#content", ".footer"] }
+
+// Single locator finding multiple elements
+// If locator ".card" finds 5 elements, returns array with 5 snapshots
+{ locator: ".card" }
 ```
 
 **Sample Output:**
