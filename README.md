@@ -708,7 +708,7 @@ X Y coordinate space, based on the provided screenshot.
 - **browser_get_html_content** 🆕
   - Title: Get HTML content
   - Description: Get HTML content of the current page or specific elements. Returns full page HTML by default, or HTML of specific elements when locator(s) provided.
-  - **Enhancement**: Extract HTML from page or specific elements with flexible locator support
+  - **Enhancement**: Extract HTML content from page or specific elements with flexible locator support
   - Parameters:
     - `locator` (string, optional): Playwright locator string to get HTML content of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
     - `locators` (array, optional): Array of Playwright locator strings to get HTML content of multiple elements. Cannot be combined with locator parameter.
@@ -918,7 +918,7 @@ X Y coordinate space, based on the provided screenshot.
 - **browser_get_html_content** 🆕
   - Title: Get HTML content
   - Description: Get HTML content of the current page or specific elements. Returns full page HTML by default, or HTML of specific elements when locator(s) provided.
-  - **Enhancement**: Extract HTML from page or specific elements with flexible locator support
+  - **Enhancement**: Extract HTML content from page or specific elements with flexible locator support
   - Parameters:
     - `locator` (string, optional): Playwright locator string to get HTML content of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
     - `locators` (array, optional): Array of Playwright locator strings to get HTML content of multiple elements. Cannot be combined with locator parameter.
