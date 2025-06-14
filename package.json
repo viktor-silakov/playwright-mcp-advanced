@@ -32,7 +32,6 @@
     "dev": "mcp-server-playwright",
     "dev-watch": "tsx watch src/program.ts",
     "clean": "rm -rf lib",
-    "publish": "npm run clean && npm run build && npm run test && npm publish",
     "release": "npm run clean && npm run update-readme && npm run build && npm run test && release-it"
   },
   "exports": {
