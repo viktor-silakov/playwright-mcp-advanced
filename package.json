@@ -19,7 +19,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "npm run update-readme && eslint . && tsc --noEmit",
-    "update-readme": "tsx utils/update-readme.ts",
+    "update-readme": "tsx utils/update-readme.ts && git add README.md && git diff --staged --quiet README.md || git commit -m \"Update README documentation automatically\"",
     "test": "playwright test --workers=5",
     "ctest": "playwright test --project=chrome",
     "ftest": "playwright test --project=firefox",

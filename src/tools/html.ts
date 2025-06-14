@@ -39,7 +39,7 @@ const htmlContent = defineTool({
     type: 'readOnly',
     advanced: {
       isNew: true,
-      enhancementNote: 'Extract HTML from page or specific elements with flexible locator support'
+      enhancementNote: 'Extract HTML content from page or specific elements with flexible locator support'
     },
   },
 
