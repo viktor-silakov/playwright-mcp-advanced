@@ -2,7 +2,11 @@
   "name": "playwright-mcp-advanced",
   "version": "0.0.29",
   "description": "Advanced Playwright Tools for MCP",
-  "keywords": ["playwright", "mcp", "tools"],
+  "keywords": [
+    "playwright",
+    "mcp",
+    "tools"
+  ],
   "type": "module",
   "repository": {
     "type": "git",
@@ -29,7 +33,7 @@
     "dev-watch": "tsx watch src/program.ts",
     "clean": "rm -rf lib",
     "publish": "npm run clean && npm run build && npm run test && npm publish",
-     "release": "npm run clean && npm run update-readme && npm run build && npm run test && release-it"
+    "release": "npm run clean && npm run update-readme && npm run build && npm run test && release-it"
   },
   "exports": {
     "./package.json": "./package.json",
@@ -60,6 +64,7 @@
     "eslint": "^9.19.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-notice": "^1.0.0",
+    "release-it": "^19.0.3",
     "typescript": "^5.8.2"
   },
   "bin": {
