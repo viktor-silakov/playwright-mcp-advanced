@@ -1,6 +1,6 @@
 {
   "name": "playwright-mcp-advanced",
-  "version": "0.0.29",
+  "version": "0.0.30",
   "description": "Advanced Playwright Tools for MCP",
   "keywords": [
     "playwright",
@@ -32,7 +32,7 @@
     "dev": "mcp-server-playwright",
     "dev-watch": "tsx watch src/program.ts",
     "clean": "rm -rf lib",
-    "release": "npm run clean && npm run update-readme && npm run build && npm run test && release-it"
+    "release": "npm run clean && npm run update-readme && npm run build && npm run test && release-it  --increment"
   },
   "exports": {
     "./package.json": "./package.json",
