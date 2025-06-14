@@ -19,15 +19,17 @@
   "scripts": {
     "build": "tsc",
     "lint": "npm run update-readme && eslint . && tsc --noEmit",
-    "update-readme": "node utils/update-readme.js",
-    "watch": "tsc --watch",
-    "test": "playwright test",
+    "update-readme": "tsx utils/update-readme.ts",
+    "test": "playwright test --workers=5",
     "ctest": "playwright test --project=chrome",
     "ftest": "playwright test --project=firefox",
     "wtest": "playwright test --project=webkit",
-    "run-server": "node lib/browserServer.js",
+    "run-server": "tsx src/browserServer.ts",
+    "dev": "mcp-server-playwright",
+    "dev-watch": "tsx watch src/program.ts",
     "clean": "rm -rf lib",
-    "npm-publish": "npm run clean && npm run build && npm run test && npm publish"
+    "publish": "npm run clean && npm run build && npm run test && npm publish",
+     "release": "npm run clean && npm run build && npm run test && release-it"
   },
   "exports": {
     "./package.json": "./package.json",
@@ -42,6 +44,7 @@
     "debug": "^4.4.1",
     "mime": "^4.0.7",
     "playwright": "1.53.0",
+    "tsx": "^4.15.1",
     "zod-to-json-schema": "^3.24.4"
   },
   "devDependencies": {
