@@ -481,151 +481,6 @@ http.createServer(async (req, res) => {
 </details>
 
 
-## 🚀 Advanced Tools
-
-This section documents the additional and enhanced tools available in this advanced version:
-
-### 📸 Enhanced Screenshot Tools
-
-<details>
-<summary><b>Enhanced browser_take_screenshot</b></summary>
-
-The `browser_take_screenshot` tool has been enhanced with additional capabilities:
-
-- **browser_take_screenshot**
-  - Title: Take a screenshot (Enhanced)
-  - Description: Take a screenshot of the current page with enhanced capabilities
-  - Parameters:
-    - `raw` (boolean, optional): Whether to return without compression (in PNG format). Default is false, which returns a JPEG image.
-    - `filename` (string, optional): File name to save the screenshot to. Defaults to `page-{timestamp}.{png|jpeg}` if not specified.
-    - **`fullPage` (boolean, optional)**: Whether to take a screenshot of the full scrollable page. Cannot be combined with element/ref/locator parameters.
-    - **`locator` (string, optional)**: Playwright locator string to screenshot a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with element/ref/fullPage parameters.
-    - `element` (string, optional): Human-readable element description used to obtain permission to screenshot the element. If not provided, the screenshot will be taken of viewport. If element is provided, ref must be provided too.
-    - `ref` (string, optional): Exact target element reference from the page snapshot. If not provided, the screenshot will be taken of viewport. If ref is provided, element must be provided too.
-  - Read-only: **true**
-
-</details>
-
-<details>
-<summary><b>Enhanced browser_screen_capture (Vision Mode)</b></summary>
-
-The `browser_screen_capture` tool has been enhanced with additional capabilities for vision mode:
-
-- **browser_screen_capture**
-  - Title: Take a screenshot (Enhanced Vision Mode)
-  - Description: Take a screenshot of the current page with enhanced capabilities
-  - Parameters:
-    - **`fullPage` (boolean, optional)**: Whether to take a screenshot of the full scrollable page. Cannot be combined with locator/locators parameters.
-    - **`locator` (string, optional)**: Playwright locator string to screenshot a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with fullPage/locators parameters.
-    - **`locators` (array, optional)**: Array of Playwright locator strings to screenshot multiple elements. Cannot be combined with fullPage/locator parameters.
-  - Read-only: **true**
-
-**Examples:**
-```javascript
-// Full page screenshot
-{ fullPage: true }
-
-// Single element screenshot
-{ locator: "#submit-button" }
-
-// Multiple elements screenshot
-{ locators: [".navbar", "#content", ".footer"] }
-
-// Single locator finding multiple elements
-// If locator ".product" finds 4 elements, takes 4 separate screenshots
-{ locator: ".product" }
-```
-
-</details>
-
-### 🔍 HTML Content Extraction Tools
-
-<details>
-<summary><b>New HTML Content Tools</b></summary>
-
-- **browser_get_html_content**
-  - Title: Get HTML content
-  - Description: Get HTML content of the current page or specific elements. Returns full page HTML by default, or HTML of specific elements when locator(s) provided.
-  - Parameters:
-    - `locator` (string, optional): Playwright locator string to get HTML content of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
-    - `locators` (array, optional): Array of Playwright locator strings to get HTML content of multiple elements. Cannot be combined with locator parameter.
-  - Read-only: **true**
-
-- **browser_get_outer_html**
-  - Title: Get outer HTML content
-  - Description: Get outer HTML content of specific elements (includes the element tag itself). Requires locator(s) to be specified.
-  - Parameters:
-    - `locator` (string, optional): Playwright locator string to get outer HTML content of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
-    - `locators` (array, optional): Array of Playwright locator strings to get outer HTML content of multiple elements. Cannot be combined with locator parameter.
-  - Read-only: **true**
-
-**Examples:**
-```javascript
-// Get full page HTML
-{}
-
-// Get innerHTML of a single element
-{ locator: "#my-div" }
-
-// Get innerHTML of multiple elements
-{ locators: [".header", "#content", ".footer"] }
-
-// Get outerHTML (including the element tag)
-{ locator: "button.submit" }
-
-// Single locator finding multiple elements
-// If locator ".item" finds 3 elements, returns array with 3 HTML contents
-{ locator: ".item" }
-```
-
-**Note:** When a single locator matches multiple elements, the tool returns an array containing the HTML content of each matched element.
-
-</details>
-
-### 📋 Element Snapshot Tools
-
-<details>
-<summary><b>New Element Snapshot Tool</b></summary>
-
-- **browser_element_snapshot**
-  - Title: Element snapshot
-  - Description: Capture accessibility snapshot of specific elements by locator(s). Better than screenshot for specific elements.
-  - Parameters:
-    - `locator` (string, optional): Playwright locator string to capture accessibility snapshot of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
-    - `locators` (array, optional): Array of Playwright locator strings to capture accessibility snapshots of multiple elements. Cannot be combined with locator parameter.
-  - Read-only: **true**
-
-**Returns structured accessibility information:**
-- Element tag name and identifiers
-- Text content
-- All element attributes
-- Visibility status
-
-**Examples:**
-```javascript
-// Single element snapshot
-{ locator: "#submit-button" }
-
-// Multiple elements snapshot
-{ locators: [".navbar", "#content", ".footer"] }
-
-// Single locator finding multiple elements
-// If locator ".card" finds 5 elements, returns array with 5 snapshots
-{ locator: ".card" }
-```
-
-**Sample Output:**
-```yaml
-### Element Snapshot (#submit-button):
-- button #submit-button .btn-primary: Submit Form
-  attributes:
-    id: "submit-button"
-    class: "btn btn-primary"
-    type: "submit"
-    disabled: "false"
-```
-</details>
-
 ### Tools
 
 The tools are available in two modes:
@@ -669,9 +524,10 @@ X Y coordinate space, based on the provided screenshot.
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
-- **browser_element_snapshot**
+- **browser_element_snapshot** 🆕
   - Title: Element snapshot
   - Description: Capture accessibility snapshot of specific elements by locator(s). Better than screenshot for specific elements.
+  - **Enhancement**: Capture structured accessibility data for specific elements using locators
   - Parameters:
     - `locator` (string, optional): Playwright locator string to capture accessibility snapshot of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
     - `locators` (array, optional): Array of Playwright locator strings to capture accessibility snapshots of multiple elements. Cannot be combined with locator parameter.
@@ -809,9 +665,10 @@ X Y coordinate space, based on the provided screenshot.
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
-- **browser_take_screenshot**
+- **browser_take_screenshot** ⭐
   - Title: Take a screenshot
   - Description: Take a screenshot of the current page. You can't perform actions based on the screenshot, use browser_snapshot for actions.
+  - **Enhancement**: Enhanced with fullPage and locator support for flexible screenshot capture
   - Parameters:
     - `raw` (boolean, optional): Whether to return without compression (in PNG format). Default is false, which returns a JPEG image.
     - `filename` (string, optional): File name to save the screenshot to. Defaults to `page-{timestamp}.{png|jpeg}` if not specified.
@@ -848,9 +705,10 @@ X Y coordinate space, based on the provided screenshot.
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
-- **browser_get_html_content**
+- **browser_get_html_content** 🆕
   - Title: Get HTML content
   - Description: Get HTML content of the current page or specific elements. Returns full page HTML by default, or HTML of specific elements when locator(s) provided.
+  - **Enhancement**: Extract HTML from page or specific elements with flexible locator support
   - Parameters:
     - `locator` (string, optional): Playwright locator string to get HTML content of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
     - `locators` (array, optional): Array of Playwright locator strings to get HTML content of multiple elements. Cannot be combined with locator parameter.
@@ -858,9 +716,10 @@ X Y coordinate space, based on the provided screenshot.
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
-- **browser_get_outer_html**
+- **browser_get_outer_html** 🆕
   - Title: Get outer HTML content
   - Description: Get outer HTML content of specific elements (includes the element tag itself). Requires locator(s) to be specified.
+  - **Enhancement**: Get complete element HTML including the element tag itself
   - Parameters:
     - `locator` (string, optional): Playwright locator string to get outer HTML content of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
     - `locators` (array, optional): Array of Playwright locator strings to get outer HTML content of multiple elements. Cannot be combined with locator parameter.
@@ -960,9 +819,10 @@ X Y coordinate space, based on the provided screenshot.
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
-- **browser_screen_capture**
+- **browser_screen_capture** ⭐
   - Title: Take a screenshot
   - Description: Take a screenshot of the current page
+  - **Enhancement**: Enhanced with fullPage and locator/locators support for flexible vision mode capture
   - Parameters:
     - `fullPage` (boolean, optional): Whether to take a screenshot of the full scrollable page. Cannot be combined with locator/locators parameters.
     - `locator` (string, optional): Playwright locator string to screenshot a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with fullPage/locators parameters.
@@ -1055,9 +915,10 @@ X Y coordinate space, based on the provided screenshot.
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
-- **browser_get_html_content**
+- **browser_get_html_content** 🆕
   - Title: Get HTML content
   - Description: Get HTML content of the current page or specific elements. Returns full page HTML by default, or HTML of specific elements when locator(s) provided.
+  - **Enhancement**: Extract HTML from page or specific elements with flexible locator support
   - Parameters:
     - `locator` (string, optional): Playwright locator string to get HTML content of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
     - `locators` (array, optional): Array of Playwright locator strings to get HTML content of multiple elements. Cannot be combined with locator parameter.
@@ -1065,9 +926,10 @@ X Y coordinate space, based on the provided screenshot.
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
-- **browser_get_outer_html**
+- **browser_get_outer_html** 🆕
   - Title: Get outer HTML content
   - Description: Get outer HTML content of specific elements (includes the element tag itself). Requires locator(s) to be specified.
+  - **Enhancement**: Get complete element HTML including the element tag itself
   - Parameters:
     - `locator` (string, optional): Playwright locator string to get outer HTML content of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
     - `locators` (array, optional): Array of Playwright locator strings to get outer HTML content of multiple elements. Cannot be combined with locator parameter.

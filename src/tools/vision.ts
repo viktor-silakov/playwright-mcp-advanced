@@ -43,6 +43,10 @@ const screenshot = defineTool({
     description: 'Take a screenshot of the current page',
     inputSchema: screenshotSchema,
     type: 'readOnly',
+    advanced: {
+      isEnhanced: true,
+      enhancementNote: 'Enhanced with fullPage and locator/locators support for flexible vision mode capture'
+    },
   },
 
   handle: async (context, params) => {
