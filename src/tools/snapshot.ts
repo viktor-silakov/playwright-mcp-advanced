@@ -60,10 +60,6 @@ const elementSnapshot = defineTool({
     description: 'Capture accessibility snapshot of specific elements by locator(s). Better than screenshot for specific elements.',
     inputSchema: elementSnapshotSchema,
     type: 'readOnly',
-    advanced: {
-      isNew: true,
-      enhancementNote: 'Capture structured accessibility data for specific elements using locators'
-    },
   },
 
   handle: async (context, params) => {
@@ -381,6 +377,8 @@ const selectOption = defineTool({
     };
   },
 });
+
+export { elementSchema };
 
 export default [
   snapshot,

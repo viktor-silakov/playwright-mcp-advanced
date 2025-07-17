@@ -17,53 +17,58 @@
 import common from './tools/common.js';
 import console from './tools/console.js';
 import dialogs from './tools/dialogs.js';
+import evaluate from './tools/evaluate.js';
 import files from './tools/files.js';
 import html from './tools/html.js';
 import install from './tools/install.js';
 import keyboard from './tools/keyboard.js';
+import mouse from './tools/mouse.js';
 import navigate from './tools/navigate.js';
 import network from './tools/network.js';
 import pdf from './tools/pdf.js';
 import snapshot from './tools/snapshot.js';
 import tabs from './tools/tabs.js';
 import screenshot from './tools/screenshot.js';
-import testing from './tools/testing.js';
-import vision from './tools/vision.js';
 import wait from './tools/wait.js';
 
 import type { Tool } from './tools/tool.js';
 
 export const snapshotTools: Tool<any>[] = [
-  ...common(true),
+  ...common,
   ...console,
-  ...dialogs(true),
-  ...files(true),
+  ...dialogs,
+  ...evaluate,
+  ...files,
   ...html,
   ...install,
-  ...keyboard(true),
-  ...navigate(true),
+  ...keyboard,
+  ...mouse,
+  ...navigate,
   ...network,
   ...pdf,
   ...screenshot,
   ...snapshot,
-  ...tabs(true),
-  ...testing,
-  ...wait(true),
+  ...tabs,
+  ...wait,
 ];
 
 export const visionTools: Tool<any>[] = [
-  ...common(false),
+  ...common,
   ...console,
-  ...dialogs(false),
-  ...files(false),
+  ...dialogs,
+  ...evaluate,
+  ...files,
   ...html,
   ...install,
-  ...keyboard(false),
-  ...navigate(false),
+  ...keyboard,
+  ...mouse,
+  ...navigate,
   ...network,
   ...pdf,
-  ...tabs(false),
-  ...testing,
-  ...vision,
-  ...wait(false),
+  ...tabs,
+  ...wait,
+];
+
+export const allTools: Tool<any>[] = [
+  ...snapshotTools,
 ];
