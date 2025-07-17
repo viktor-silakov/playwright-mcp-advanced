@@ -65,7 +65,9 @@ node utils/generate-links.js
 
 ### Getting started
 
-First, install the Playwright MCP server with your client. 
+First, install the Playwright MCP server with your client.
+
+**Standard config** works in most of the tools:
 
 #### For the original Playwright MCP:
 ```js
