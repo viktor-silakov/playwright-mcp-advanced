@@ -36,9 +36,9 @@ import type { Tool } from './tools/tool.js';
 export const snapshotTools: Tool<any>[] = [
   ...common,
   ...console,
-  ...dialogs(true),
+  ...dialogs,
   ...evaluate,
-  ...files(true),
+  ...files,
   ...html,
   ...install,
   ...keyboard,
@@ -55,9 +55,9 @@ export const snapshotTools: Tool<any>[] = [
 export const visionTools: Tool<any>[] = [
   ...common,
   ...console,
-  ...dialogs(false),
+  ...dialogs,
   ...evaluate,
-  ...files(false),
+  ...files,
   ...html,
   ...install,
   ...keyboard,
