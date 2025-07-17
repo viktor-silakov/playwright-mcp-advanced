@@ -55,6 +55,10 @@ const screenshot = defineTool({
     description: `Take a screenshot of the current page. You can't perform actions based on the screenshot, use browser_snapshot for actions.`,
     inputSchema: screenshotSchema,
     type: 'readOnly',
+    advanced: {
+      isEnhanced: true,
+      enhancementNote: 'Enhanced with fullPage and locator support for flexible screenshot capture'
+    },
   },
 
   handle: async (context, params) => {

@@ -37,6 +37,10 @@ const htmlContent = defineTool({
     description: `Get HTML content of the current page or specific elements. Returns full page HTML by default, or HTML of specific elements when locator(s) provided.`,
     inputSchema: htmlContentSchema,
     type: 'readOnly',
+    advanced: {
+      isNew: true,
+      enhancementNote: 'Extract HTML content from page or specific elements with flexible locator support'
+    },
   },
 
   handle: async (context, params) => {
@@ -163,6 +167,10 @@ const outerHtmlContent = defineTool({
       path: ['locator', 'locators']
     }),
     type: 'readOnly',
+    advanced: {
+      isNew: true,
+      enhancementNote: 'Get complete element HTML including the element tag itself'
+    },
   },
 
   handle: async (context, params) => {
