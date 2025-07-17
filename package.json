@@ -1,32 +1,38 @@
 {
-  "name": "@playwright/mcp",
-  "version": "0.0.30",
-  "description": "Playwright Tools for MCP",
+  "name": "playwright-mcp-advanced",
+  "version": "0.0.31",
+  "description": "Advanced Playwright Tools for MCP",
+  "keywords": [
+    "playwright",
+    "mcp",
+    "tools"
+  ],
   "type": "module",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/microsoft/playwright-mcp.git"
+    "url": "git+https://github.com/viktor-silakov/playwright-mcp-advanced.git"
   },
-  "homepage": "https://playwright.dev",
+  "homepage": "https://github.com/viktor-silakov/playwright-mcp-advanced",
   "engines": {
     "node": ">=18"
   },
   "author": {
-    "name": "Microsoft Corporation"
+    "name": "Viktor Silakov"
   },
   "license": "Apache-2.0",
   "scripts": {
     "build": "tsc",
     "lint": "npm run update-readme && eslint . && tsc --noEmit",
-    "update-readme": "node utils/update-readme.js",
-    "watch": "tsc --watch",
-    "test": "playwright test",
+    "update-readme": "tsx utils/update-readme.ts && git add README.md && git diff --staged --quiet README.md || git commit -m \"Update README documentation automatically\"",
+    "test": "playwright test --workers=5",
     "ctest": "playwright test --project=chrome",
     "ftest": "playwright test --project=firefox",
     "wtest": "playwright test --project=webkit",
-    "run-server": "node lib/browserServer.js",
+    "run-server": "tsx src/browserServer.ts",
+    "dev": "mcp-server-playwright",
+    "dev-watch": "tsx watch src/program.ts",
     "clean": "rm -rf lib",
-    "npm-publish": "npm run clean && npm run build && npm run test && npm publish"
+    "release": "npm run clean && npm run update-readme && npm run build && npm run test && release-it  --increment"
   },
   "exports": {
     "./package.json": "./package.json",
@@ -40,26 +46,24 @@
     "commander": "^13.1.0",
     "debug": "^4.4.1",
     "mime": "^4.0.7",
-    "playwright": "1.55.0-alpha-1752701791000",
-    "playwright-core": "1.55.0-alpha-1752701791000",
-    "ws": "^8.18.1",
+    "playwright": "1.53.0",
+    "tsx": "^4.15.1",
     "zod-to-json-schema": "^3.24.4"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.19.0",
-    "@playwright/test": "1.55.0-alpha-1752701791000",
+    "@playwright/test": "1.53.0",
     "@stylistic/eslint-plugin": "^3.0.1",
-    "@types/chrome": "^0.0.315",
     "@types/debug": "^4.1.12",
     "@types/node": "^22.13.10",
-    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "@typescript-eslint/parser": "^8.26.1",
     "@typescript-eslint/utils": "^8.26.1",
     "eslint": "^9.19.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-notice": "^1.0.0",
+    "release-it": "^19.0.3",
     "typescript": "^5.8.2"
   },
   "bin": {
