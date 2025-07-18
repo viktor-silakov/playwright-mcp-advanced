@@ -40,6 +40,13 @@ This advanced version includes additional capabilities not available in the orig
 - **Developer-friendly** - Clear error messages and formatted output
 - **Vision mode compatibility** - All HTML extraction tools work in both snapshot and vision modes
 
+#### 🔗 Chrome Extension Mode
+- **`--extension`** - Connect to existing Chrome tabs through a Chrome extension
+- **CDP Relay Server** - Bridge between Chrome extension and MCP server
+- **Live Session Control** - Work with authenticated sessions and existing browser state
+- **Real-time Interaction** - No need to launch new browser instances
+- **Tab Sharing** - Share active Chrome tabs with the MCP server
+
 ### Requirements
 - Node.js 18 or newer
 - VS Code, Cursor, Windsurf, Claude Desktop or any other MCP client
@@ -252,6 +259,8 @@ Playwright MCP server supports following arguments. They can be provided in the 
   --config <path>              path to the configuration file.
   --device <device>            device to emulate, for example: "iPhone 15"
   --executable-path <path>     path to the browser executable.
+  --extension                  run in extension mode, starts CDP relay server
+                               for Chrome extension
   --headless                   run browser in headless mode, headed by default
   --host <host>                host to bind server to. Default is localhost. Use
                                0.0.0.0 to bind to all interfaces.
@@ -482,6 +491,71 @@ http.createServer(async (req, res) => {
 ```
 </details>
 
+## Chrome Extension Mode
+
+The Chrome Extension mode allows you to connect the MCP server to existing Chrome tabs through a Chrome extension. This is useful for:
+
+- Working with authenticated sessions
+- Debugging existing web applications
+- Interacting with live browser state
+- Avoiding the need to launch new browser instances
+
+### Setting up Chrome Extension Mode
+
+#### 1. Start the MCP server with extension mode
+
+```bash
+npx playwright-mcp-advanced@latest --extension --port 9223
+```
+
+Or configure your MCP client:
+
+```js
+{
+  "mcpServers": {
+    "playwright-extension": {
+      "command": "npx",
+      "args": [
+        "playwright-mcp-advanced@latest",
+        "--extension",
+        "--port", "9223"
+      ]
+    }
+  }
+}
+```
+
+#### 2. Install the Chrome Extension
+
+1. Open Chrome and navigate to `chrome://extensions/`
+2. Enable "Developer mode" (toggle in top right)
+3. Click "Load unpacked" and select the `extension/` folder from this repository
+4. The "Playwright MCP Bridge" extension should now be installed
+
+#### 3. Connect a Chrome tab
+
+1. Open the Chrome tab you want to control
+2. Click the Playwright MCP Bridge extension icon
+3. The extension will show the bridge URL (default: `ws://localhost:9223/extension`)
+4. Click "Share This Tab" to connect the tab to the MCP server
+
+#### 4. Use MCP tools with the connected tab
+
+Once connected, you can use all MCP tools like `browser_navigate`, `browser_click`, `browser_screenshot`, etc., and they will operate on the connected Chrome tab.
+
+### Extension Features
+
+- **Real-time connection status** - See which tab is currently shared
+- **Easy tab switching** - Switch between shared tabs directly from the extension
+- **Automatic reconnection** - Handles connection drops gracefully
+- **Single tab limitation** - Only one tab can be shared at a time for security
+
+### Troubleshooting Extension Mode
+
+- **Connection failed**: Check that the MCP server is running with `--extension` flag
+- **Permission errors**: Ensure the extension has debugging permissions
+- **Tab not responding**: Try refreshing the tab and reconnecting
+- **Multiple tabs**: Only one tab can be shared at a time - disconnect current tab first
 
 ### Tools
 

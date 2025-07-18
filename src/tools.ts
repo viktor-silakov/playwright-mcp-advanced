@@ -29,6 +29,7 @@ import pdf from './tools/pdf.js';
 import snapshot from './tools/snapshot.js';
 import tabs from './tools/tabs.js';
 import screenshot from './tools/screenshot.js';
+import vision from './tools/vision.js';
 import wait from './tools/wait.js';
 
 import type { Tool } from './tools/tool.js';
@@ -65,7 +66,9 @@ export const visionTools: Tool<any>[] = [
   ...navigate,
   ...network,
   ...pdf,
+  ...snapshot,
   ...tabs,
+  ...vision,
   ...wait,
 ];
 

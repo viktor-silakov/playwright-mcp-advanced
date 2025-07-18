@@ -28,7 +28,7 @@ test('browser_file_upload', async ({ client, server }, testInfo) => {
     arguments: { url: server.PREFIX },
   })).toContainTextContent(`
 \`\`\`yaml
-- generic [active] [ref=e1]:
+- generic [ref=e1]:
   - button "Choose File" [ref=e2]
   - button "Button" [ref=e3]
 \`\`\``);

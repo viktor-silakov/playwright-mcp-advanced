@@ -33,6 +33,7 @@ export type CLIOptions = {
   config?: string;
   device?: string;
   executablePath?: string;
+  extension?: boolean;
   headless?: boolean;
   host?: string;
   ignoreHttpsErrors?: boolean;

@@ -22,6 +22,7 @@ import { startHttpServer, startHttpTransport, startStdioTransport } from './tran
 import { resolveCLIConfig } from './config.js';
 import { Server } from './server.js';
 import { packageJSON } from './package.js';
+import { CDPRelay } from './cdp-relay.js';
 
 program
     .version('Version ' + packageJSON.version)
@@ -34,6 +35,7 @@ program
     .option('--cdp-endpoint <endpoint>', 'CDP endpoint to connect to.')
     .option('--config <path>', 'path to the configuration file.')
     .option('--device <device>', 'device to emulate, for example: "iPhone 15"')
+    .option('--extension', 'run in extension mode, starts CDP relay server for Chrome extension')
     .option('--executable-path <path>', 'path to the browser executable.')
     .option('--headless', 'run browser in headless mode, headed by default')
     .option('--host <host>', 'host to bind server to. Default is localhost. Use 0.0.0.0 to bind to all interfaces.')
@@ -58,9 +60,28 @@ program
         options.caps = 'vision';
       }
       const config = await resolveCLIConfig(options);
-      const httpServer = config.server.port !== undefined ? await startHttpServer(config.server) : undefined;
+      
+      // Handle extension mode
+      let cdpRelay: CDPRelay | undefined;
+      if (options.extension) {
+        // Use a different port for CDP relay than the HTTP server
+        const cdpPort = config.server.port ? Number(config.server.port) + 1 : 9224;
+        cdpRelay = new CDPRelay({ 
+          port: cdpPort, 
+          host: config.server.host || 'localhost' 
+        });
+        await cdpRelay.start();
+        // eslint-disable-next-line no-console
+        console.error(`\nCDP relay server started. Extension URL: ${cdpRelay.getServerUrl()}`);
+        // eslint-disable-next-line no-console
+        console.error('Connect your Chrome extension to this URL to start sharing tabs.');
+      }
 
-      const server = new Server(config);
+      // In extension mode, we need HTTP server for MCP transport
+      const httpServer = (config.server.port !== undefined || options.extension) ? 
+        await startHttpServer(config.server) : undefined;
+
+      const server = new Server(config, { cdpRelay });
       server.setupExitWatchdog();
 
       if (httpServer)

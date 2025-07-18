@@ -1,0 +1,117 @@
+# Cursor IDE Rules for Playwright MCP Advanced Development
+
+## Project Context
+This is an advanced version of the Playwright MCP server providing enhanced browser automation capabilities. All changes must be properly documented and tested.
+
+## Development Workflow Rules
+
+### 🧪 Testing Requirements
+- **ALWAYS run tests after ANY code change**: `npm test`
+- **Write tests BEFORE implementing features** (TDD approach)
+- **All tests must pass** before committing changes
+- **Add test cases for edge cases** and error conditions
+- **Test coverage should not decrease** with new changes
+
+### 📝 Documentation Requirements
+- **Update README.md** for every significant change
+- **Document new MCP tools** with proper schemas and examples
+- **Document the reasoning** behind changes, not just what changed
+- **Include before/after examples** when applicable
+- **Update tool documentation** if functionality changes
+- **All documentation and comments must be in English**
+
+### 🔧 Code Quality Rules
+- **Follow existing code patterns** and conventions
+- **Add TypeScript types** for all new code
+- **Handle error cases gracefully** with proper error messages
+- **Use meaningful variable and function names**
+- **Add JSDoc comments** for public methods and complex logic
+- **All code comments must be in English**
+
+### 📁 File Organization
+- **Tests go in `tests/`** directory
+- **Source code in `src/`** directory
+- **Compiled code in `lib/`** directory (auto-generated)
+- **Tools in `src/tools/`** directory
+- **Examples in `examples/`** directory
+- **Follow existing naming conventions** for files and directories
+
+### 🚀 Enhancement Process
+1. **Identify the problem** clearly in documentation
+2. **Create test cases** that demonstrate the issue
+3. **Implement the solution** with proper error handling
+4. **Run all tests** to ensure no regressions
+5. **Update documentation** with detailed explanation
+6. **Test manually** with MCP client (VS Code, Claude, etc.)
+
+### ⚠️ Critical Reminders
+- **This is an advanced version** - maintain compatibility with original MCP API
+- **Breaking changes** must be clearly documented
+- **Performance impact** should be considered for all changes
+- **Memory leaks** must be avoided in long-running processes
+- **Cross-platform compatibility** must be maintained
+- **All documentation and code comments must be in English**
+
+### 🎯 Specific to This Project
+- **MCP tool schemas** must be valid and well-documented
+- **Browser automation** should be efficient and reliable
+- **Playwright integration** is critical - test thoroughly with edge cases
+- **Error handling** for browser operations must be robust
+- **Screenshot and HTML extraction** should handle various scenarios
+- **Server lifecycle** management is performance-sensitive
+
+### 📋 Before Committing Checklist
+- [ ] All tests pass (`npm test`)
+- [ ] README.md updated with changes
+- [ ] Code follows existing patterns
+- [ ] Error cases handled properly
+- [ ] Manual testing completed with MCP client
+- [ ] No console.log statements left in code
+- [ ] TypeScript compilation successful (`npm run build`)
+- [ ] All documentation and comments are in English
+
+### 🔍 Code Review Focus Areas
+- **Test coverage** for new functionality
+- **Error handling** and edge cases
+- **Performance implications** of changes
+- **Documentation accuracy** and completeness
+- **MCP protocol compatibility** maintenance
+- **Language consistency** (English only)
+
+## Example Commands
+```bash
+# Run all tests
+npm test
+
+# Run tests for specific browser
+npm run ctest  # Chrome
+npm run ftest  # Firefox
+npm run wtest  # WebKit
+npm run etest  # Chrome Extension mode
+
+# Build TypeScript
+npm run build
+
+# Run development server
+npm run dev
+
+# Run linting
+npm run lint
+
+# Clean build artifacts
+npm run clean
+```
+
+## Language Requirements
+- **All documentation** must be in English
+- **All code comments** must be in English
+- **All commit messages** should be in English
+- **All variable and function names** should use English words
+
+## Remember
+Every change, no matter how small, should be:
+1. **Tested** - with automated Playwright tests
+2. **Documented** - in README.md (in English)
+3. **Verified** - by running the full test suite
+
+This ensures the advanced version remains stable and maintainable while adding valuable enhancements.

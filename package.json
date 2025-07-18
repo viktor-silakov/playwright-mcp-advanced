@@ -28,6 +28,7 @@
     "ctest": "playwright test --project=chrome",
     "ftest": "playwright test --project=firefox",
     "wtest": "playwright test --project=webkit",
+    "etest": "playwright test --project=chromium-extension",
     "run-server": "tsx src/browserServer.ts",
     "dev": "mcp-server-playwright",
     "dev-watch": "tsx watch src/program.ts",
@@ -48,6 +49,7 @@
     "mime": "^4.0.7",
     "playwright": "1.53.0",
     "tsx": "^4.15.1",
+    "ws": "^8.18.1",
     "zod-to-json-schema": "^3.24.4"
   },
   "devDependencies": {
@@ -55,8 +57,10 @@
     "@eslint/js": "^9.19.0",
     "@playwright/test": "1.53.0",
     "@stylistic/eslint-plugin": "^3.0.1",
+    "@types/chrome": "^0.0.315",
     "@types/debug": "^4.1.12",
     "@types/node": "^22.13.10",
+    "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^8.26.1",
     "@typescript-eslint/parser": "^8.26.1",
     "@typescript-eslint/utils": "^8.26.1",

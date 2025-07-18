@@ -140,7 +140,7 @@ test('confirm dialog (true)', async ({ client, server }) => {
   expect(result).toContainTextContent('// <internal code to handle "confirm" dialog>');
   expect(result).toContainTextContent(`- Page Snapshot
 \`\`\`yaml
-- generic [active] [ref=e1]: "true"
+- generic [ref=e1]: "true"
 \`\`\``);
 });
 
@@ -175,7 +175,7 @@ test('confirm dialog (false)', async ({ client, server }) => {
 
   expect(result).toContainTextContent(`- Page Snapshot
 \`\`\`yaml
-- generic [active] [ref=e1]: "false"
+- generic [ref=e1]: "false"
 \`\`\``);
 });
 
@@ -211,7 +211,7 @@ test('prompt dialog', async ({ client, server }) => {
 
   expect(result).toContainTextContent(`- Page Snapshot
 \`\`\`yaml
-- generic [active] [ref=e1]: Answer
+- generic [ref=e1]: Answer
 \`\`\``);
 });
 

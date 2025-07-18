@@ -224,6 +224,11 @@ test('browser_take_screenshot (cursor)', async ({ startClient, server }, testInf
   })).toEqual({
     content: [
       {
+        data: expect.any(String),
+        mimeType: 'image/jpeg',
+        type: 'image',
+      },
+      {
         text: expect.stringContaining(`Screenshot viewport and save it as`),
         type: 'text',
       },

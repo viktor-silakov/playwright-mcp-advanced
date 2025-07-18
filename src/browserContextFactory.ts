@@ -23,14 +23,17 @@ import debug from 'debug';
 import * as playwright from 'playwright';
 
 import type { FullConfig } from './config.js';
+import type { CDPRelay } from './cdp-relay.js';
 
 const testDebug = debug('pw:mcp:test');
 
-export function contextFactory(browserConfig: FullConfig['browser']): BrowserContextFactory {
+export function contextFactory(browserConfig: FullConfig['browser'], { forceCdp, cdpRelay }: { forceCdp?: boolean; cdpRelay?: CDPRelay } = {}): BrowserContextFactory {
   if (browserConfig.remoteEndpoint)
     return new RemoteContextFactory(browserConfig);
-  if (browserConfig.cdpEndpoint)
+  if (browserConfig.cdpEndpoint || forceCdp)
     return new CdpContextFactory(browserConfig);
+  if (cdpRelay && cdpRelay.isConnected())
+    return new CdpRelayContextFactory(browserConfig, cdpRelay);
   if (browserConfig.isolated)
     return new IsolatedContextFactory(browserConfig);
   return new PersistentContextFactory(browserConfig);
@@ -227,4 +230,93 @@ async function findFreePort() {
     });
     server.on('error', reject);
   });
+}
+
+class CdpRelayContextFactory extends BaseContextFactory {
+  private cdpRelay: CDPRelay;
+
+  constructor(browserConfig: FullConfig['browser'], cdpRelay: CDPRelay) {
+    super('cdp-relay', browserConfig);
+    this.cdpRelay = cdpRelay;
+  }
+
+  protected override async _doObtainBrowser(): Promise<playwright.Browser> {
+    if (!this.cdpRelay.isConnected()) {
+      throw new Error('CDP relay is not connected to a browser tab. Please connect via the Chrome extension.');
+    }
+
+    // Create a fake CDP endpoint that points to our relay
+    const relayEndpoint = `ws://localhost:${(this.cdpRelay as any).port}/relay`;
+    
+    // We need to create a custom CDP connection that goes through our relay
+    return await this.createRelayBrowser();
+  }
+
+  private async createRelayBrowser(): Promise<playwright.Browser> {
+    // For CDP relay, we'll create a minimal browser-like object
+    // that forwards commands to the relay
+    const mockBrowser = {
+      contexts: () => [mockContext],
+      newContext: () => mockContext,
+      close: () => Promise.resolve(),
+      on: () => {},
+      _connection: {
+        send: async (message: string) => {
+          const parsed = JSON.parse(message);
+          try {
+            const result = await this.cdpRelay.sendCommand(parsed.method, parsed.params, parsed.sessionId);
+            return JSON.stringify({ id: parsed.id, result });
+          } catch (error: any) {
+            return JSON.stringify({ 
+              id: parsed.id, 
+              error: { code: -32000, message: error.message } 
+            });
+          }
+        }
+      }
+    };
+
+    const mockContext = {
+      pages: () => [mockPage],
+      newPage: () => mockPage,
+      close: () => Promise.resolve(),
+      on: () => {},
+    };
+
+    const mockPage = {
+      url: () => 'about:blank',
+      goto: (url: string) => this.cdpRelay.sendCommand('Page.navigate', { url }),
+      click: (selector: string) => this.cdpRelay.sendCommand('Runtime.evaluate', { 
+        expression: `document.querySelector('${selector}').click()` 
+      }),
+      screenshot: (options?: any) => this.cdpRelay.sendCommand('Page.captureScreenshot', options),
+      evaluate: (fn: string | Function, ...args: any[]) => {
+        const expression = typeof fn === 'string' ? fn : `(${fn.toString()})(${args.map(a => JSON.stringify(a)).join(',')})`;
+        return this.cdpRelay.sendCommand('Runtime.evaluate', { expression });
+      },
+      on: () => {},
+      locator: (selector: string) => ({
+        click: () => mockPage.click(selector),
+        fill: (value: string) => this.cdpRelay.sendCommand('Runtime.evaluate', { 
+          expression: `document.querySelector('${selector}').value = '${value}'` 
+        }),
+        textContent: () => this.cdpRelay.sendCommand('Runtime.evaluate', { 
+          expression: `document.querySelector('${selector}').textContent` 
+        }),
+      }),
+    };
+
+    return mockBrowser as any;
+  }
+
+  protected override async _doCreateContext(browser: playwright.Browser): Promise<playwright.BrowserContext> {
+    // For CDP relay, we work with the existing context from the extension
+    const contexts = browser.contexts();
+    if (contexts.length > 0) {
+      return contexts[0];
+    }
+    
+    // If no context exists, create a new one
+    return browser.newContext(this.browserConfig.contextOptions);
+  }
 }

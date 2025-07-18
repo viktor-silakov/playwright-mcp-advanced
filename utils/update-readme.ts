@@ -43,13 +43,13 @@ import type { ToolSchema } from '../src/tools/tool.js';
 const categories = {
   'Interactions': [
     ...snapshotTools,
-    ...keyboardTools(true),
-    ...waitTools(true),
-    ...filesTools(true),
-    ...dialogsTools(true),
+    ...keyboardTools,
+    ...waitTools,
+    ...filesTools,
+    ...dialogsTools,
   ],
   'Navigation': [
-    ...navigateTools(true),
+    ...navigateTools,
   ],
   'Resources': [
     ...screenshotTools,
@@ -60,20 +60,20 @@ const categories = {
   ],
   'Utilities': [
     ...installTools,
-    ...commonTools(true),
+    ...commonTools,
   ],
   'Tabs': [
-    ...tabsTools(true),
+    ...tabsTools,
   ],
   'Testing': [
     ...testTools,
   ],
   'Vision mode': [
     ...visionTools,
-    ...keyboardTools(false),
-    ...waitTools(false),
-    ...filesTools(false),
-    ...dialogsTools(false),
+    ...keyboardTools,
+    ...waitTools,
+    ...filesTools,
+    ...dialogsTools,
     ...htmlTools,
   ],
 };

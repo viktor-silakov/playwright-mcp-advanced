@@ -54,8 +54,16 @@ const evaluate = defineTool({
     return {
       code,
       action: async () => {
-        const receiver = locator ?? tab.page as any;
-        const result = await receiver._evaluateFunction(params.function);
+        // Convert string function to actual function
+        const evaluateFunction = new Function('return ' + params.function)();
+        let result: any;
+        
+        if (locator) {
+          result = await locator.evaluate(evaluateFunction);
+        } else {
+          result = await tab.page.evaluate(evaluateFunction);
+        }
+        
         return {
           content: [{ type: 'text', text: '- Result: ' + (JSON.stringify(result, null, 2) || 'undefined') }],
         };

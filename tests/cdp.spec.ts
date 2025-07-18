@@ -25,7 +25,7 @@ test('cdp server', async ({ cdpServer, startClient, server }) => {
   expect(await client.callTool({
     name: 'browser_navigate',
     arguments: { url: server.HELLO_WORLD },
-  })).toContainTextContent(`- generic [active] [ref=e1]: Hello, world!`);
+  })).toContainTextContent(`- generic [ref=e1]: Hello, world!`);
 });
 
 test('cdp server reuse tab', async ({ cdpServer, startClient, server }) => {
@@ -55,7 +55,7 @@ test('cdp server reuse tab', async ({ cdpServer, startClient, server }) => {
 - Page Title: Title
 - Page Snapshot
 \`\`\`yaml
-- generic [active] [ref=e1]: Hello, world!
+- generic [ref=e1]: Hello, world!
 \`\`\`
 `);
 });
@@ -76,7 +76,7 @@ test('should throw connection error and allow re-connecting', async ({ cdpServer
   expect(await client.callTool({
     name: 'browser_navigate',
     arguments: { url: server.PREFIX },
-  })).toContainTextContent(`- generic [active] [ref=e1]: Hello, world!`);
+  })).toContainTextContent(`- generic [ref=e1]: Hello, world!`);
 });
 
 // NOTE: Can be removed when we drop Node.js 18 support and changed to import.meta.filename.

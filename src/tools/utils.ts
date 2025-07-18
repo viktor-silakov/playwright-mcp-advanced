@@ -82,8 +82,7 @@ export function sanitizeForFilePath(s: string) {
 
 export async function generateLocator(locator: playwright.Locator): Promise<string> {
   try {
-    const { resolvedSelector } = await (locator as any)._resolveSelector();
-    return asLocator('javascript', resolvedSelector);
+    return (locator as any)._generateLocatorString();
   } catch (e) {
     throw new Error('Ref not found, likely because element was removed. Use browser_snapshot to see what elements are currently on the page.');
   }

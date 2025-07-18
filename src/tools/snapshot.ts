@@ -212,13 +212,17 @@ const elementSchema = z.object({
   ref: z.string().describe('Exact target element reference from the page snapshot'),
 });
 
+const clickSchema = elementSchema.extend({
+  doubleClick: z.boolean().optional().describe('Whether to double click instead of single click'),
+});
+
 const click = defineTool({
   capability: 'core',
   schema: {
     name: 'browser_click',
     title: 'Click',
     description: 'Perform click on a web page',
-    inputSchema: elementSchema,
+    inputSchema: clickSchema,
     type: 'destructive',
   },
 
@@ -226,14 +230,17 @@ const click = defineTool({
     const tab = context.currentTabOrDie();
     const locator = tab.snapshotOrDie().refLocator(params);
 
+    const clickMethod = params.doubleClick ? 'dblclick' : 'click';
+    const description = params.doubleClick ? 'Double click' : 'Click';
+
     const code = [
-      `// Click ${params.element}`,
-      `await page.${await generateLocator(locator)}.click();`
+      `// ${description} ${params.element}`,
+      `await page.${await generateLocator(locator)}.${clickMethod}();`
     ];
 
     return {
       code,
-      action: () => locator.click(),
+      action: () => params.doubleClick ? locator.dblclick() : locator.click(),
       captureSnapshot: true,
       waitForNetwork: true,
     };

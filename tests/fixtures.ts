@@ -31,7 +31,7 @@ import type { Stream } from 'stream';
 
 export type TestOptions = {
   mcpBrowser: string | undefined;
-  mcpMode: 'docker' | undefined;
+  mcpMode: 'docker' | 'extension' | undefined;
 };
 
 type CDPServer = {
@@ -62,7 +62,7 @@ export const test = baseTest.extend<TestFixtures & TestOptions, WorkerFixtures>(
   },
 
   visionClient: async ({ startClient }, use) => {
-    const { client } = await startClient({ args: ['--vision'] });
+    const { client } = await startClient({ args: ['--caps=vision'] });
     await use(client);
   },
 
@@ -81,6 +81,9 @@ export const test = baseTest.extend<TestFixtures & TestOptions, WorkerFixtures>(
         args.push('--headless');
       if (mcpBrowser)
         args.push(`--browser=${mcpBrowser}`);
+      if (mcpMode === 'extension') {
+        args.push('--extension');
+      }
       if (options?.args)
         args.push(...options.args);
       if (options?.config) {
@@ -181,6 +184,116 @@ async function createTransport(args: string[], mcpMode: TestOptions['mcpMode']):
     return {
       transport,
       stderr: transport.stderr,
+    };
+  }
+
+  // Check if extension mode is being used
+  const isExtensionMode = args.includes('--extension');
+  
+  if (isExtensionMode) {
+    // For extension mode, we need to start the server as a separate process
+    // and use HTTP transport to connect to it
+    const { spawn } = await import('child_process');
+    
+    // Use unique port for each test
+    let port = '9223';
+    const portIndex = args.indexOf('--port');
+    if (portIndex >= 0) {
+      port = args[portIndex + 1];
+    } else {
+      // Generate unique port using timestamp + parallel index + random component
+      const timestamp = Date.now() % 10000;
+      const parallelIndex = test.info().parallelIndex;
+      const randomComponent = Math.floor(Math.random() * 100);
+      port = (9223 + timestamp + parallelIndex + randomComponent).toString();
+      args.push('--port', port);
+    }
+    
+    let stderrOutput = '';
+    
+    const serverProcess = spawn('node', [path.join(path.dirname(__filename), '../cli.js'), ...args], {
+      stdio: ['pipe', 'pipe', 'pipe'],
+      cwd: path.join(path.dirname(__filename), '..'),
+      env: {
+        ...process.env,
+        DEBUG: 'pw:mcp:test',
+        DEBUG_COLORS: '0',
+        DEBUG_HIDE_DATE: '1',
+      },
+    });
+
+    // Wait for server to start
+    await new Promise((resolve, reject) => {
+      let timeout: NodeJS.Timeout;
+      let httpServerStarted = false;
+      let cdpServerStarted = false;
+      
+      const checkReady = (data: Buffer) => {
+        const output = data.toString();
+        stderrOutput += output;
+        if (process.env.PWMCP_DEBUG)
+          console.log('Extension server output:', output);
+        
+        if (output.includes('Listening on http://localhost:')) {
+          httpServerStarted = true;
+        }
+        if (output.includes('CDP relay server started')) {
+          cdpServerStarted = true;
+        }
+        
+        // Both servers need to be ready for extension mode
+        if (httpServerStarted && cdpServerStarted) {
+          clearTimeout(timeout);
+          serverProcess.stderr?.off('data', checkReady);
+          resolve(null);
+        }
+      };
+      
+      serverProcess.stderr?.on('data', checkReady);
+      timeout = setTimeout(() => {
+        serverProcess.stderr?.off('data', checkReady);
+        reject(new Error(`Server did not start within timeout. HTTP: ${httpServerStarted}, CDP: ${cdpServerStarted}. Output: ${stderrOutput}`));
+      }, 10000); // Increased timeout to 10 seconds
+    });
+    
+    // Use HTTP transport instead of stdio
+    const { SSEClientTransport } = await import('@modelcontextprotocol/sdk/client/sse.js');
+    const transport = new SSEClientTransport(new URL(`http://localhost:${port}/sse`));
+    
+    // Create a mock stderr stream that stores the output
+    const mockStderr = {
+      on: (event: string, callback: (data: Buffer) => void) => {
+        if (event === 'data') {
+          // No-op for extension mode since we already captured the output
+        }
+        return mockStderr;
+      },
+      off: () => mockStderr,
+      toString: () => stderrOutput,
+    };
+    
+    // Ensure cleanup of the server process
+    const originalClose = transport.close;
+    transport.close = async () => {
+      if (serverProcess && !serverProcess.killed) {
+        serverProcess.kill();
+      }
+      return originalClose.call(transport);
+    };
+    
+    return {
+      transport,
+      stderr: {
+        on: (event: string, callback: (data: Buffer) => void) => {
+          if (event === 'data') {
+            // Immediately call the callback with the captured output
+            callback(Buffer.from(stderrOutput));
+          }
+          return mockStderr;
+        },
+        off: () => mockStderr,
+        toString: () => stderrOutput,
+      },
     };
   }
 

@@ -21,17 +21,22 @@ import type { FullConfig } from './config.js';
 import type { Connection } from './connection.js';
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import type { BrowserContextFactory } from './browserContextFactory.js';
+import type { CDPRelay } from './cdp-relay.js';
 
 export class Server {
   readonly config: FullConfig;
   private _connectionList: Connection[] = [];
   private _browserConfig: FullConfig['browser'];
   private _contextFactory: BrowserContextFactory;
+  private _cdpRelay?: CDPRelay;
 
-  constructor(config: FullConfig) {
+  constructor(config: FullConfig, options: { cdpRelay?: CDPRelay } = {}) {
     this.config = config;
     this._browserConfig = config.browser;
-    this._contextFactory = contextFactory(this._browserConfig);
+    this._cdpRelay = options.cdpRelay;
+    this._contextFactory = contextFactory(this._browserConfig, { 
+      cdpRelay: this._cdpRelay && this._cdpRelay.isConnected() ? this._cdpRelay : undefined 
+    });
   }
 
   async createConnection(transport: Transport): Promise<Connection> {
