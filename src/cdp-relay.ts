@@ -19,6 +19,7 @@ import { WebSocketServer } from 'ws';
 import debug from 'debug';
 import type { IncomingMessage } from 'http';
 import { WebSocket } from 'ws';
+import { logger } from './logger.js';
 
 const debugLog = debug('pw:mcp:cdp-relay');
 
@@ -99,12 +100,12 @@ export class CDPRelay {
    */
   private _handleExtensionConnection(ws: WebSocket): void {
     debugLog('Extension connecting');
-    console.log('🔌 [CDP-RELAY] Extension WebSocket connection established');
+    logger.log('🔌 Extension WebSocket connection established');
 
       // Only allow one connection at a time
       if (this.activeConnection) {
       debugLog('Closing existing extension connection');
-      console.log('⚠️ [CDP-RELAY] Closing existing extension connection');
+      logger.warn('⚠️ Closing existing extension connection');
         this.activeConnection.socket.close();
         this.activeConnection = null;
       }
@@ -119,11 +120,11 @@ export class CDPRelay {
       ws.on('message', (data: Buffer) => {
         try {
           const message = JSON.parse(data.toString());
-          console.log('📨 [CDP-RELAY] Message from extension:', JSON.stringify(message, null, 2));
+          logger.log('📨 Message from extension:', JSON.stringify(message, null, 2));
           this.handleExtensionMessage(message);
         } catch (error) {
           debugLog('Error parsing message from extension:', error);
-          console.log('❌ [CDP-RELAY] Error parsing extension message:', error);
+          logger.error('❌ Error parsing extension message:', error);
         }
       });
 
@@ -181,13 +182,13 @@ export class CDPRelay {
     if ('type' in message && message.type === 'connection_info') {
       // Connection info message
       debugLog('Received connection info:', message);
-      console.log('📋 [CDP-RELAY] Received connection_info from extension:', JSON.stringify(message, null, 2));
+      logger.log('📋 Received connection_info from extension:', JSON.stringify(message, null, 2));
       if (this.activeConnection) {
         this.activeConnection.sessionId = message.sessionId;
         this.activeConnection.targetInfo = message.targetInfo;
-        console.log('✅ [CDP-RELAY] Connection info updated, sessionId:', message.sessionId);
+        logger.log('✅ Connection info updated, sessionId:', message.sessionId);
       } else {
-        console.log('⚠️ [CDP-RELAY] No active connection to update with connection_info');
+        logger.warn('⚠️ No active connection to update with connection_info');
       }
       return;
     }
@@ -216,25 +217,25 @@ export class CDPRelay {
    */
   private _handlePlaywrightMessage(message: any): void {
     debugLog('← Playwright:', message.method || `response(${message.id})`);
-    console.log('🎭 [CDP-RELAY] Command from Playwright:', JSON.stringify(message, null, 2));
+    logger.log('🎭 Command from Playwright:', JSON.stringify(message, null, 2));
 
     // Handle Browser domain methods locally
     if (message.method?.startsWith('Browser.')) {
-      console.log('🌐 [CDP-RELAY] Handling Browser domain method locally');
+      logger.log('🌐 Handling Browser domain method locally');
       this._handleBrowserDomainMethod(message);
       return;
     }
 
     // Handle Target domain methods
     if (message.method?.startsWith('Target.')) {
-      console.log('🎯 [CDP-RELAY] Handling Target domain method');
+      logger.log('🎯 Handling Target domain method');
       this._handleTargetDomainMethod(message);
       return;
     }
 
     // Forward other commands to extension
     if (message.method) {
-      console.log('📤 [CDP-RELAY] Forwarding command to extension');
+      logger.log('📤 Forwarding command to extension');
       this._forwardToExtension(message);
     }
   }

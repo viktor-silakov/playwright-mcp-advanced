@@ -1,16 +1,9 @@
 {
     "zencoder.enableRepoIndexing": true,
     "zencoder.mcpServers": {
-        "puppeteer": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@modelcontextprotocol/server-puppeteer"
-            ]
-        },
         "playwright-mcp-advanced": {
-            "type": "http",
-            "url": "http://localhost:3000/mcp"
+            "url": "http://localhost:3000/sse",
+            "type": "sse"
         }
     }
 }
