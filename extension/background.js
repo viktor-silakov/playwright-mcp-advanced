@@ -21,7 +21,7 @@
 // @ts-check
 
 function debugLog(...args) {
-  const enabled = false;
+  const enabled = true;  // ✅ Включаю логи!
   if (enabled) {
     console.log('[Extension]', ...args);
   }
@@ -115,18 +115,24 @@ class TabShareExtension {
    */
   async connectTab(tabId, bridgeUrl) {
     try {
-      debugLog(`Connecting tab ${tabId} to bridge at ${bridgeUrl}`);
+      console.log(`[BACKGROUND] 🔌 Connecting tab ${tabId} to bridge at ${bridgeUrl}`);
 
       // Attach chrome debugger
+      console.log(`[BACKGROUND] 🔧 Attaching Chrome debugger to tab ${tabId}...`);
       const debuggee = { tabId };
       await chrome.debugger.attach(debuggee, '1.3');
 
-      if (chrome.runtime.lastError)
+      if (chrome.runtime.lastError) {
+        console.error(`[BACKGROUND] ❌ Chrome debugger error:`, chrome.runtime.lastError.message);
         throw new Error(chrome.runtime.lastError.message);
+      }
+      console.log(`[BACKGROUND] ✅ Chrome debugger attached to tab ${tabId}`);
+
       const targetInfo = /** @type {any} */ (await chrome.debugger.sendCommand(debuggee, 'Target.getTargetInfo'));
-      debugLog('Target info:', targetInfo);
+      console.log(`[BACKGROUND] 📋 Target info for tab ${tabId}:`, targetInfo);
 
       // Connect to bridge server
+      console.log(`[BACKGROUND] 🌐 Creating WebSocket connection to ${bridgeUrl}...`);
       const socket = new WebSocket(bridgeUrl);
 
       const connection = {
@@ -135,20 +141,37 @@ class TabShareExtension {
         tabId,
         sessionId: `pw-tab-${tabId}`
       };
+      console.log(`[BACKGROUND] 🆔 Created connection with sessionId: ${connection.sessionId}`);
 
       await new Promise((resolve, reject) => {
         socket.onopen = () => {
-          debugLog(`WebSocket connected for tab ${tabId}`);
-          // Send initial connection info to bridge
-          socket.send(JSON.stringify({
+          console.log(`[BACKGROUND] ✅ WebSocket connected for tab ${tabId}`);
+          
+          const connectionInfo = {
             type: 'connection_info',
             sessionId: connection.sessionId,
             targetInfo: targetInfo?.targetInfo
-          }));
+          };
+          console.log(`[BACKGROUND] 📤 Sending connection info:`, connectionInfo);
+          
+          // Send initial connection info to bridge
+          socket.send(JSON.stringify(connectionInfo));
           resolve(undefined);
         };
-        socket.onerror = reject;
-        setTimeout(() => reject(new Error('Connection timeout')), 5000);
+        
+        socket.onerror = (error) => {
+          console.error(`[BACKGROUND] ❌ WebSocket error for tab ${tabId}:`, error);
+          reject(error);
+        };
+        
+        socket.onclose = (event) => {
+          console.log(`[BACKGROUND] 🔌 WebSocket closed for tab ${tabId}:`, event.code, event.reason);
+        };
+        
+        setTimeout(() => {
+          console.error(`[BACKGROUND] ⏰ Connection timeout for tab ${tabId}`);
+          reject(new Error('Connection timeout'));
+        }, 5000);
       });
 
       // Set up message handling
@@ -183,14 +206,16 @@ class TabShareExtension {
    */
   setupMessageHandling(connection) {
     const { debuggee, socket, tabId, sessionId: rootSessionId } = connection;
+    console.log(`[BACKGROUND] 🔧 Setting up message handling for tab ${tabId}, rootSessionId: ${rootSessionId}`);
 
     // WebSocket -> chrome.debugger
     socket.onmessage = async (event) => {
       let message;
       try {
         message = JSON.parse(event.data);
+        console.log(`[BACKGROUND] 📨 Received from bridge (tab ${tabId}):`, message);
       } catch (error) {
-        debugLog('Error parsing message:', error);
+        console.error(`[BACKGROUND] ❌ Error parsing message for tab ${tabId}:`, error);
         socket.send(JSON.stringify({
           error: {
             code: -32700,
@@ -201,20 +226,29 @@ class TabShareExtension {
       }
 
       try {
-        debugLog('Received from bridge:', message);
-
         const debuggerSession = { ...debuggee };
         const sessionId = message.sessionId;
+        
+        console.log(`[BACKGROUND] 🔀 Processing message - sessionId: ${sessionId}, rootSessionId: ${rootSessionId}`);
+        
         // Pass session id, unless it's the root session.
-        if (sessionId && sessionId !== rootSessionId)
+        if (sessionId && sessionId !== rootSessionId) {
           debuggerSession.sessionId = sessionId;
+          console.log(`[BACKGROUND] 🆔 Using custom sessionId: ${sessionId}`);
+        } else {
+          console.log(`[BACKGROUND] 🆔 Using root session`);
+        }
 
+        console.log(`[BACKGROUND] 📤 Sending CDP command - method: ${message.method}, params:`, message.params);
+        
         // Forward CDP command to chrome.debugger
         const result = await chrome.debugger.sendCommand(
           debuggerSession,
           message.method,
           message.params || {}
         );
+        
+        console.log(`[BACKGROUND] 📨 CDP command result:`, result);
 
         // Send response back to bridge
         const response = {

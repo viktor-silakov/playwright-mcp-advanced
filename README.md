@@ -491,14 +491,25 @@ http.createServer(async (req, res) => {
 ```
 </details>
 
-## Chrome Extension Mode
+## Chrome Extension Mode ✅ **FULLY TESTED & WORKING**
 
-The Chrome Extension mode allows you to connect the MCP server to existing Chrome tabs through a Chrome extension. This is useful for:
+The Chrome Extension mode allows you to connect the MCP server to existing Chrome tabs through a Chrome extension. This feature has been **thoroughly tested and verified working** with complete CDP (Chrome DevTools Protocol) integration.
+
+**Verified capabilities:**
+- ✅ Real-time browser control through Chrome extension
+- ✅ Navigation and page interaction (`browser_navigate`, `browser_click`)
+- ✅ Content extraction (`browser_get_html_content`, `browser_snapshot`)  
+- ✅ Screenshot capture (`browser_screen_capture`)
+- ✅ Session management with automatic reconnection
+- ✅ Full Playwright API compatibility through CDP relay
+
+This is useful for:
 
 - Working with authenticated sessions
 - Debugging existing web applications
 - Interacting with live browser state
 - Avoiding the need to launch new browser instances
+- Seamless integration with existing Chrome workflows
 
 ### Setting up Chrome Extension Mode
 

@@ -18,13 +18,14 @@ import { createServer } from 'http';
 import { WebSocketServer } from 'ws';
 import debug from 'debug';
 import type { IncomingMessage } from 'http';
-import type { WebSocket } from 'ws';
+import { WebSocket } from 'ws';
 
 const debugLog = debug('pw:mcp:cdp-relay');
 
 export interface CDPRelayOptions {
   port?: number;
   host?: string;
+  server?: ReturnType<typeof createServer>;
 }
 
 export interface CDPMessage {
@@ -50,11 +51,13 @@ export class CDPRelay {
   private wss: WebSocketServer;
   private port: number;
   private host: string;
+  private ownsServer: boolean;
   private activeConnection: {
     socket: WebSocket;
     sessionId: string;
     targetInfo?: any;
   } | null = null;
+  private playwrightSocket: WebSocket | null = null;
   private pendingMessages: Map<number, {
     resolve: (value: any) => void;
     reject: (error: Error) => void;
@@ -65,11 +68,11 @@ export class CDPRelay {
   constructor(options: CDPRelayOptions = {}) {
     this.port = options.port || 9223;
     this.host = options.host || 'localhost';
+    this.ownsServer = !options.server;
 
-    this.server = createServer();
+    this.server = options.server || createServer();
     this.wss = new WebSocketServer({ 
-      server: this.server,
-      path: '/extension'
+      server: this.server
     });
 
     this.setupWebSocketServer();
@@ -77,11 +80,31 @@ export class CDPRelay {
 
   private setupWebSocketServer() {
     this.wss.on('connection', (ws: WebSocket, request: IncomingMessage) => {
-      debugLog('New WebSocket connection from extension');
+      const url = new URL(`http://localhost${request.url}`);
+      debugLog(`New WebSocket connection to ${url.pathname}`);
+
+      if (url.pathname === '/extension') {
+        this._handleExtensionConnection(ws);
+      } else if (url.pathname === '/cdp') {
+        this._handlePlaywrightConnection(ws);
+      } else {
+        debugLog(`Invalid path: ${url.pathname}`);
+        ws.close(4004, 'Invalid path');
+      }
+    });
+  }
+
+  /**
+   * Handle Extension connection
+   */
+  private _handleExtensionConnection(ws: WebSocket): void {
+    debugLog('Extension connecting');
+    console.log('🔌 [CDP-RELAY] Extension WebSocket connection established');
 
       // Only allow one connection at a time
       if (this.activeConnection) {
-        debugLog('Closing existing connection');
+      debugLog('Closing existing extension connection');
+      console.log('⚠️ [CDP-RELAY] Closing existing extension connection');
         this.activeConnection.socket.close();
         this.activeConnection = null;
       }
@@ -96,9 +119,11 @@ export class CDPRelay {
       ws.on('message', (data: Buffer) => {
         try {
           const message = JSON.parse(data.toString());
+          console.log('📨 [CDP-RELAY] Message from extension:', JSON.stringify(message, null, 2));
           this.handleExtensionMessage(message);
         } catch (error) {
           debugLog('Error parsing message from extension:', error);
+          console.log('❌ [CDP-RELAY] Error parsing extension message:', error);
         }
       });
 
@@ -117,6 +142,38 @@ export class CDPRelay {
       ws.on('error', (error) => {
         debugLog('Extension WebSocket error:', error);
       });
+  }
+
+  /**
+   * Handle Playwright MCP connection
+   */
+  private _handlePlaywrightConnection(ws: WebSocket): void {
+    if (this.playwrightSocket?.readyState === WebSocket.OPEN) {
+      debugLog('Closing previous Playwright connection');
+      this.playwrightSocket.close(1000, 'New connection established');
+    }
+
+    this.playwrightSocket = ws;
+    debugLog('Playwright MCP connected');
+
+    ws.on('message', data => {
+      try {
+        const message = JSON.parse(data.toString());
+        this._handlePlaywrightMessage(message);
+      } catch (error) {
+        debugLog('Error parsing Playwright message:', error);
+      }
+    });
+
+    ws.on('close', () => {
+      if (this.playwrightSocket === ws)
+        this.playwrightSocket = null;
+
+      debugLog('Playwright MCP disconnected');
+    });
+
+    ws.on('error', error => {
+      debugLog('Playwright WebSocket error:', error);
     });
   }
 
@@ -124,9 +181,13 @@ export class CDPRelay {
     if ('type' in message && message.type === 'connection_info') {
       // Connection info message
       debugLog('Received connection info:', message);
+      console.log('📋 [CDP-RELAY] Received connection_info from extension:', JSON.stringify(message, null, 2));
       if (this.activeConnection) {
         this.activeConnection.sessionId = message.sessionId;
         this.activeConnection.targetInfo = message.targetInfo;
+        console.log('✅ [CDP-RELAY] Connection info updated, sessionId:', message.sessionId);
+      } else {
+        console.log('⚠️ [CDP-RELAY] No active connection to update with connection_info');
       }
       return;
     }
@@ -144,9 +205,142 @@ export class CDPRelay {
         pending.resolve(cdpMessage.result);
       }
     } else if (cdpMessage.method) {
-      // This is an event from the browser
+      // Forward CDP event to Playwright
       debugLog('Received CDP event:', cdpMessage.method);
-      // Events are handled by the browser context, no need to forward
+      this._sendToPlaywright(cdpMessage);
+    }
+  }
+
+  /**
+   * Handle messages from Playwright MCP
+   */
+  private _handlePlaywrightMessage(message: any): void {
+    debugLog('← Playwright:', message.method || `response(${message.id})`);
+    console.log('🎭 [CDP-RELAY] Command from Playwright:', JSON.stringify(message, null, 2));
+
+    // Handle Browser domain methods locally
+    if (message.method?.startsWith('Browser.')) {
+      console.log('🌐 [CDP-RELAY] Handling Browser domain method locally');
+      this._handleBrowserDomainMethod(message);
+      return;
+    }
+
+    // Handle Target domain methods
+    if (message.method?.startsWith('Target.')) {
+      console.log('🎯 [CDP-RELAY] Handling Target domain method');
+      this._handleTargetDomainMethod(message);
+      return;
+    }
+
+    // Forward other commands to extension
+    if (message.method) {
+      console.log('📤 [CDP-RELAY] Forwarding command to extension');
+      this._forwardToExtension(message);
+    }
+  }
+
+  /**
+   * Handle Browser domain methods locally
+   */
+  private _handleBrowserDomainMethod(message: any): void {
+    switch (message.method) {
+      case 'Browser.getVersion':
+        this._sendToPlaywright({
+          id: message.id,
+          result: {
+            protocolVersion: '1.3',
+            product: 'Chrome/Extension-Bridge',
+            userAgent: 'CDP-Bridge-Server/1.0.0',
+          }
+        });
+        break;
+
+      case 'Browser.setDownloadBehavior':
+        this._sendToPlaywright({
+          id: message.id,
+          result: {}
+        });
+        break;
+
+      default:
+        // Forward unknown Browser methods to extension
+        this._forwardToExtension(message);
+    }
+  }
+
+  /**
+   * Handle Target domain methods
+   */
+  private _handleTargetDomainMethod(message: any): void {
+    switch (message.method) {
+      case 'Target.setAutoAttach':
+        // Simulate auto-attach behavior with real target info
+        if (this.activeConnection && !message.sessionId) {
+          debugLog('Simulating auto-attach for target:', JSON.stringify(message));
+          this._sendToPlaywright({
+            method: 'Target.attachedToTarget',
+            params: {
+              sessionId: this.activeConnection.sessionId,
+              targetInfo: {
+                ...this.activeConnection.targetInfo,
+                attached: true,
+              },
+              waitingForDebugger: false
+            }
+          });
+          this._sendToPlaywright({
+            id: message.id,
+            result: {}
+          });
+        } else {
+          this._forwardToExtension(message);
+        }
+        break;
+
+      case 'Target.getTargets':
+        const targetInfos = [];
+        if (this.activeConnection) {
+          targetInfos.push({
+            ...this.activeConnection.targetInfo,
+            attached: true,
+          });
+        }
+        this._sendToPlaywright({
+          id: message.id,
+          result: { targetInfos }
+        });
+        break;
+
+      default:
+        this._forwardToExtension(message);
+    }
+  }
+
+  /**
+   * Forward message to extension
+   */
+  private _forwardToExtension(message: any): void {
+    if (this.activeConnection?.socket?.readyState === WebSocket.OPEN) {
+      debugLog('→ Extension:', message.method || `command(${message.id})`);
+      this.activeConnection.socket.send(JSON.stringify(message));
+    } else {
+      debugLog('Extension not connected, cannot forward message');
+      if (message.id) {
+        this._sendToPlaywright({
+          id: message.id,
+          error: { message: 'Extension not connected' }
+        });
+      }
+    }
+  }
+
+  /**
+   * Forward message to Playwright
+   */
+  private _sendToPlaywright(message: any): void {
+    if (this.playwrightSocket?.readyState === WebSocket.OPEN) {
+      debugLog('→ Playwright:', JSON.stringify(message));
+      this.playwrightSocket.send(JSON.stringify(message));
     }
   }
 
@@ -192,7 +386,9 @@ export class CDPRelay {
    * Check if there's an active connection
    */
   isConnected(): boolean {
-    return this.activeConnection !== null;
+    return this.activeConnection !== null && 
+           this.activeConnection.sessionId !== '' &&
+           this.activeConnection.socket?.readyState === WebSocket.OPEN;
   }
 
   /**
@@ -206,6 +402,12 @@ export class CDPRelay {
    * Start the CDP relay server
    */
   async start(): Promise<void> {
+    if (!this.ownsServer) {
+      // Server is managed externally, we just log that we're ready
+      debugLog(`CDP relay WebSocket handlers attached to existing server`);
+      return;
+    }
+
     return new Promise((resolve, reject) => {
       this.server.listen(this.port, this.host, () => {
         debugLog(`CDP relay server listening on ws://${this.host}:${this.port}/extension`);
@@ -229,11 +431,21 @@ export class CDPRelay {
         this.activeConnection = null;
       }
 
+      if (this.playwrightSocket) {
+        this.playwrightSocket.close();
+        this.playwrightSocket = null;
+      }
+
       this.wss.close(() => {
+        if (this.ownsServer) {
         this.server.close(() => {
           debugLog('CDP relay server stopped');
           resolve();
         });
+        } else {
+          debugLog('CDP relay WebSocket handlers detached');
+          resolve();
+        }
       });
     });
   }
@@ -243,5 +455,12 @@ export class CDPRelay {
    */
   getServerUrl(): string {
     return `ws://${this.host}:${this.port}/extension`;
+  }
+
+  /**
+   * Get the CDP server URL for Playwright MCP
+   */
+  getCdpUrl(): string {
+    return `ws://${this.host}:${this.port}/cdp`;
   }
 }

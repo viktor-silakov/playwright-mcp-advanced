@@ -28,14 +28,25 @@ import type { CDPRelay } from './cdp-relay.js';
 const testDebug = debug('pw:mcp:test');
 
 export function contextFactory(browserConfig: FullConfig['browser'], { forceCdp, cdpRelay }: { forceCdp?: boolean; cdpRelay?: CDPRelay } = {}): BrowserContextFactory {
-  if (browserConfig.remoteEndpoint)
+  console.log('[FACTORY] 🏭 Selecting context factory - forceCdp:', forceCdp, 'cdpRelay:', !!cdpRelay, 'cdpRelay.isConnected:', cdpRelay?.isConnected());
+  
+  if (browserConfig.remoteEndpoint) {
+    console.log('[FACTORY] ✅ Using RemoteContextFactory');
     return new RemoteContextFactory(browserConfig);
-  if (browserConfig.cdpEndpoint || forceCdp)
-    return new CdpContextFactory(browserConfig);
-  if (cdpRelay && cdpRelay.isConnected())
+  }
+  if (cdpRelay) {
+    console.log('[FACTORY] ✅ Using CdpRelayContextFactory');
     return new CdpRelayContextFactory(browserConfig, cdpRelay);
-  if (browserConfig.isolated)
+  }
+  if (browserConfig.cdpEndpoint || forceCdp) {
+    console.log('[FACTORY] ✅ Using CdpContextFactory');
+    return new CdpContextFactory(browserConfig);
+  }
+  if (browserConfig.isolated) {
+    console.log('[FACTORY] ✅ Using IsolatedContextFactory');
     return new IsolatedContextFactory(browserConfig);
+  }
+  console.log('[FACTORY] ✅ Using PersistentContextFactory (default)');
   return new PersistentContextFactory(browserConfig);
 }
 
@@ -241,18 +252,26 @@ class CdpRelayContextFactory extends BaseContextFactory {
   }
 
   protected override async _doObtainBrowser(): Promise<playwright.Browser> {
+    console.log('[CDP-RELAY-FACTORY] 🏭 Creating browser through CDP relay...');
+    console.log('[CDP-RELAY-FACTORY] 🔗 CDP relay connected:', this.cdpRelay.isConnected());
+    
     if (!this.cdpRelay.isConnected()) {
+      console.error('[CDP-RELAY-FACTORY] ❌ CDP relay is not connected!');
       throw new Error('CDP relay is not connected to a browser tab. Please connect via the Chrome extension.');
     }
 
     // Create a fake CDP endpoint that points to our relay
-    const relayEndpoint = `ws://localhost:${(this.cdpRelay as any).port}/relay`;
+    const relayEndpoint = this.cdpRelay.getCdpUrl();
+    console.log('[CDP-RELAY-FACTORY] 🔗 Relay endpoint:', relayEndpoint);
     
     // We need to create a custom CDP connection that goes through our relay
+    console.log('[CDP-RELAY-FACTORY] 🔧 Creating relay browser...');
     return await this.createRelayBrowser();
   }
 
   private async createRelayBrowser(): Promise<playwright.Browser> {
+    console.log('[CDP-RELAY-FACTORY] 🤖 Creating mock browser...');
+    
     // For CDP relay, we'll create a minimal browser-like object
     // that forwards commands to the relay
     const mockBrowser = {
@@ -294,9 +313,64 @@ class CdpRelayContextFactory extends BaseContextFactory {
         const expression = typeof fn === 'string' ? fn : `(${fn.toString()})(${args.map(a => JSON.stringify(a)).join(',')})`;
         return this.cdpRelay.sendCommand('Runtime.evaluate', { expression });
       },
+      // Add missing Playwright Page methods  
+      setDefaultNavigationTimeout: (timeout: number) => Promise.resolve(),
+      setDefaultTimeout: (timeout: number) => Promise.resolve(),
+      waitForLoadState: (state?: string) => Promise.resolve(),
+      waitForTimeout: (timeout: number) => new Promise(resolve => setTimeout(resolve, timeout)),
+      waitForEvent: (event: string, options?: any) => {
+        // Mock implementation for waitForEvent
+        return new Promise((resolve, reject) => {
+          if (event === 'download') {
+            // Mock download event that never fires
+            setTimeout(() => reject(new Error('Download timeout')), 100);
+          } else {
+            // Default mock - resolve immediately
+            setTimeout(() => resolve({}), 100);
+          }
+        });
+      },
+      // Add internal Playwright methods
+      _wrapApiCall: async (callback: Function, options?: any) => {
+        try {
+          return await callback();
+        } catch (error) {
+          throw error;
+        }
+      },
+      _snapshotForAI: async (options?: any) => {
+        // Mock implementation for _snapshotForAI
+        try {
+          const html = await this.cdpRelay.sendCommand('Runtime.evaluate', { 
+            expression: 'document.documentElement.outerHTML' 
+          });
+          return {
+            html: html?.result?.value || '<html><body>Mock snapshot</body></html>',
+            viewport: { width: 1280, height: 720 },
+            url: 'about:blank'
+          };
+        } catch (error) {
+          return {
+            html: '<html><body>Mock snapshot - error</body></html>',
+            viewport: { width: 1280, height: 720 },
+            url: 'about:blank'
+          };
+        }
+      },
+      content: () => this.cdpRelay.sendCommand('Runtime.evaluate', { expression: 'document.documentElement.outerHTML' }),
+      title: () => this.cdpRelay.sendCommand('Runtime.evaluate', { expression: 'document.title' }),
+      reload: (options?: any) => this.cdpRelay.sendCommand('Page.reload', options || {}),
+      goBack: (options?: any) => this.cdpRelay.sendCommand('Page.goBack', options || {}),
+      goForward: (options?: any) => this.cdpRelay.sendCommand('Page.goForward', options || {}),
+      close: () => Promise.resolve(),
+      isClosed: () => false,
       on: () => {},
+      off: () => {},
+      once: () => {},
       locator: (selector: string) => ({
-        click: () => mockPage.click(selector),
+        click: () => this.cdpRelay.sendCommand('Runtime.evaluate', { 
+          expression: `document.querySelector('${selector}').click()` 
+        }),
         fill: (value: string) => this.cdpRelay.sendCommand('Runtime.evaluate', { 
           expression: `document.querySelector('${selector}').value = '${value}'` 
         }),

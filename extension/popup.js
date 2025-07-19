@@ -32,21 +32,26 @@ class PopupController {
   }
 
   async init() {
+    console.log('[POPUP] 🚀 Popup controller initializing...');
+    
     // Get current tab
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
     this.currentTab = tab;
+    console.log('[POPUP] 📋 Current tab:', tab?.url, 'ID:', tab?.id);
 
     // Load saved bridge URL
     const result = await chrome.storage.sync.get(['bridgeUrl']);
-    const savedUrl = result.bridgeUrl || 'ws://localhost:9223/extension';
+    const savedUrl = result.bridgeUrl || 'ws://localhost:3000/extension';
     this.bridgeUrlInput.value = savedUrl;
     this.bridgeUrlInput.disabled = false;
+    console.log('[POPUP] 🔗 Loaded bridge URL:', savedUrl);
 
     // Set up event listeners
     this.bridgeUrlInput.addEventListener('input', this.onUrlChange.bind(this));
     this.connectBtn.addEventListener('click', this.onConnectClick.bind(this));
 
     // Update UI based on current state
+    console.log('[POPUP] 🔄 Updating UI...');
     await this.updateUI();
   }
 
@@ -162,27 +167,42 @@ class PopupController {
   }
 
   async onConnectClick() {
-    if (!this.bridgeUrlInput || !this.currentTab?.id) return;
+    console.log('[POPUP] 🔌 Connect button clicked!');
+    
+    if (!this.bridgeUrlInput || !this.currentTab?.id) {
+      console.error('[POPUP] ❌ Missing bridge URL input or current tab ID');
+      return;
+    }
 
     const url = this.bridgeUrlInput.value.trim();
+    console.log('[POPUP] 🔗 Attempting to connect to:', url);
+    console.log('[POPUP] 📋 Current tab ID:', this.currentTab.id);
+    
     if (!this.isValidWebSocketUrl(url)) {
+      console.error('[POPUP] ❌ Invalid WebSocket URL:', url);
       this.showStatus('error', 'Please enter a valid WebSocket URL');
       return;
     }
 
     // Save URL to storage
+    console.log('[POPUP] 💾 Saving URL to storage...');
     await chrome.storage.sync.set({ bridgeUrl: url });
 
     // Send connect message to background script
+    console.log('[POPUP] 📤 Sending connect message to background script...');
     const response = await chrome.runtime.sendMessage({
       type: 'connect',
       tabId: this.currentTab.id,
       bridgeUrl: url
     });
 
+    console.log('[POPUP] 📨 Response from background script:', response);
+
     if (response.success) {
+      console.log('[POPUP] ✅ Connection successful, updating UI...');
       await this.updateUI();
     } else {
+      console.error('[POPUP] ❌ Connection failed:', response.error);
       this.showStatus('error', response.error || 'Failed to connect');
     }
   }

@@ -61,25 +61,47 @@ program
       }
       const config = await resolveCLIConfig(options);
       
-      // Handle extension mode
-      let cdpRelay: CDPRelay | undefined;
-      if (options.extension) {
-        // Use a different port for CDP relay than the HTTP server
-        const cdpPort = config.server.port ? Number(config.server.port) + 1 : 9224;
-        cdpRelay = new CDPRelay({ 
-          port: cdpPort, 
-          host: config.server.host || 'localhost' 
-        });
-        await cdpRelay.start();
-        // eslint-disable-next-line no-console
-        console.error(`\nCDP relay server started. Extension URL: ${cdpRelay.getServerUrl()}`);
-        // eslint-disable-next-line no-console
-        console.error('Connect your Chrome extension to this URL to start sharing tabs.');
+      // Validate extension mode requirements
+      if (options.extension && config.server.port === undefined) {
+        throw new Error('Extension mode requires HTTP server, but no port was specified');
       }
-
+      
       // In extension mode, we need HTTP server for MCP transport
       const httpServer = (config.server.port !== undefined || options.extension) ? 
         await startHttpServer(config.server) : undefined;
+
+      // Handle extension mode
+      let cdpRelay: CDPRelay | undefined;
+      if (options.extension) {
+        cdpRelay = new CDPRelay({ 
+          server: httpServer,
+          host: config.server.host || 'localhost',
+          port: config.server.port || 9223
+        });
+        await cdpRelay.start();
+        
+        const address = httpServer?.address();
+        let serverUrl: string;
+        if (typeof address === 'string') {
+          serverUrl = address;
+        } else if (address) {
+          const host = address.family === 'IPv4' ? address.address : `[${address.address}]`;
+          const resolvedHost = (host === '0.0.0.0' || host === '[::]') ? 'localhost' : host;
+          serverUrl = `ws://${resolvedHost}:${address.port}`;
+        } else {
+          serverUrl = `ws://localhost:${config.server.port || 9223}`;
+        }
+        
+        // Set CDP endpoint for browser context factory
+        config.browser.cdpEndpoint = `${serverUrl}/cdp`;
+        
+        // eslint-disable-next-line no-console
+        console.error(`\nCDP relay server started. Extension URL: ${serverUrl}/extension`);
+        // eslint-disable-next-line no-console
+        console.error(`Playwright MCP URL: ${serverUrl}/cdp`);
+        // eslint-disable-next-line no-console
+        console.error('Connect your Chrome extension to the Extension URL to start sharing tabs.');
+      }
 
       const server = new Server(config, { cdpRelay });
       server.setupExitWatchdog();

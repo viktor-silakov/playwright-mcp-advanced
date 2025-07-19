@@ -35,7 +35,8 @@ export class Server {
     this._browserConfig = config.browser;
     this._cdpRelay = options.cdpRelay;
     this._contextFactory = contextFactory(this._browserConfig, { 
-      cdpRelay: this._cdpRelay && this._cdpRelay.isConnected() ? this._cdpRelay : undefined 
+      forceCdp: !!this._cdpRelay,
+      cdpRelay: this._cdpRelay
     });
   }
 

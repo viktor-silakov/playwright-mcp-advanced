@@ -95,7 +95,18 @@ export async function resolveCLIConfig(cliOptions: CLIOptions): Promise<FullConf
   // Derive artifact output directory from config.outputDir
   if (result.saveTrace)
     result.browser.launchOptions.tracesDir = path.join(result.outputDir, 'traces');
+  
+  // Validate the final configuration
+  validateConfig(result, cliOptions);
+  
   return result;
+}
+
+export function validateConfig(config: FullConfig, cliOptions: CLIOptions) {
+  if (cliOptions.extension) {
+    if (config.browser?.browserName !== 'chromium')
+      throw new Error('Extension mode is only supported for Chromium browsers.');
+  }
 }
 
 export async function configFromCLIOptions(cliOptions: CLIOptions): Promise<Config> {
@@ -143,6 +154,8 @@ export async function configFromCLIOptions(cliOptions: CLIOptions): Promise<Conf
 
   if (cliOptions.device && cliOptions.cdpEndpoint)
     throw new Error('Device emulation is not supported with cdpEndpoint.');
+  if (cliOptions.device && cliOptions.extension)
+    throw new Error('Device emulation is not supported with extension mode.');
 
   // Context options
   const contextOptions: BrowserContextOptions = cliOptions.device ? devices[cliOptions.device] : {};
