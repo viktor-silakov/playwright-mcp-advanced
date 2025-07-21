@@ -28,7 +28,7 @@ import type { CDPRelay } from './cdp-relay.js';
 const testDebug = debug('pw:mcp:test');
 
 export function contextFactory(browserConfig: FullConfig['browser'], { forceCdp, cdpRelay }: { forceCdp?: boolean; cdpRelay?: CDPRelay } = {}): BrowserContextFactory {
-  console.log('[FACTORY] 🏭 Selecting context factory - forceCdp:', forceCdp, 'cdpRelay:', !!cdpRelay, 'cdpRelay.isConnected:', cdpRelay?.isConnected());
+  console.log('[FACTORY] 🏭 Selecting context factory - forceCdp:', forceCdp, 'cdpRelay:', !!cdpRelay, 'cdpRelay.isConnected:', cdpRelay?.isConnected(), 'electron:', browserConfig.electron);
   
   if (browserConfig.remoteEndpoint) {
     console.log('[FACTORY] ✅ Using RemoteContextFactory');
@@ -37,6 +37,10 @@ export function contextFactory(browserConfig: FullConfig['browser'], { forceCdp,
   if (cdpRelay) {
     console.log('[FACTORY] ✅ Using CdpRelayContextFactory');
     return new CdpRelayContextFactory(browserConfig, cdpRelay);
+  }
+  if (browserConfig.electron && browserConfig.cdpEndpoint) {
+    console.log('[FACTORY] ✅ Using ElectronContextFactory');
+    return new ElectronContextFactory(browserConfig);
   }
   if (browserConfig.cdpEndpoint || forceCdp) {
     console.log('[FACTORY] ✅ Using CdpContextFactory');
@@ -54,7 +58,7 @@ export interface BrowserContextFactory {
   createContext(): Promise<{ browserContext: playwright.BrowserContext, close: () => Promise<void> }>;
 }
 
-class BaseContextFactory implements BrowserContextFactory {
+export class BaseContextFactory implements BrowserContextFactory {
   readonly browserConfig: FullConfig['browser'];
   protected _browserPromise: Promise<playwright.Browser> | undefined;
   readonly name: string;
@@ -452,5 +456,47 @@ class CdpRelayContextFactory extends BaseContextFactory {
     
     // If no context exists, create a new one
     return browser.newContext(this.browserConfig.contextOptions);
+  }
+}
+
+export class ElectronContextFactory extends BaseContextFactory {
+  constructor(browserConfig: FullConfig['browser']) {
+    super('electron', browserConfig);
+  }
+
+  protected override async _doObtainBrowser(): Promise<playwright.Browser> {
+    console.log('[ELECTRON-FACTORY] 🔌 Connecting to Electron app via CDP...');
+    console.log('[ELECTRON-FACTORY] 🔗 CDP endpoint:', this.browserConfig.cdpEndpoint);
+    
+    if (!this.browserConfig.cdpEndpoint) {
+      throw new Error('CDP endpoint is required for Electron mode.');
+    }
+
+    return playwright.chromium.connectOverCDP(this.browserConfig.cdpEndpoint);
+  }
+
+  protected override async _doCreateContext(browser: playwright.Browser): Promise<playwright.BrowserContext> {
+    console.log('[ELECTRON-FACTORY] 🎯 Getting existing browser context...');
+    
+    // For Electron, get the existing context and page
+    const contexts = browser.contexts();
+    console.log('[ELECTRON-FACTORY] 📄 Available contexts:', contexts.length);
+    
+    if (contexts.length === 0) {
+      throw new Error('No browser contexts found in Electron application. Make sure the Electron app is running with remote debugging enabled.');
+    }
+
+    // Use the first available context
+    const context = contexts[0];
+    const pages = context.pages();
+    console.log('[ELECTRON-FACTORY] 📄 Pages in context:', pages.length);
+    
+    if (pages.length === 0) {
+      console.log('[ELECTRON-FACTORY] ⚠️  No pages found, context will be empty until a page is created');
+    } else {
+      console.log('[ELECTRON-FACTORY] ✅ Found existing page:', pages[0].url());
+    }
+
+    return context;
   }
 }

@@ -48,6 +48,14 @@ This advanced version includes additional capabilities not available in the orig
 - **Tab Sharing** - Share active Chrome tabs with the MCP server
 - **Smart Redirect Handling** - Automatically updates targetInfo after redirects
 
+#### ⚡ Electron Application Support
+- **`--electron`** - Connect to existing Electron applications with remote debugging enabled
+- **Native App Automation** - Control and test Electron apps using the same MCP protocol
+- **Context Reuse** - Uses existing browser contexts and pages from running Electron apps
+- **File:// Protocol Support** - Works with local file protocols common in Electron applications
+- **Live App Testing** - Test and interact with production Electron applications
+- **No Browser Launch** - Connects to your running Electron app instead of launching new browsers
+
 ### Requirements
 - Node.js 18 or newer
 - VS Code, Cursor, Windsurf, Claude Desktop or any other MCP client
@@ -259,6 +267,8 @@ Playwright MCP server supports following arguments. They can be provided in the 
   --cdp-endpoint <endpoint>    CDP endpoint to connect to.
   --config <path>              path to the configuration file.
   --device <device>            device to emulate, for example: "iPhone 15"
+  --electron                   enable Electron application support, requires
+                               --cdp-endpoint
   --executable-path <path>     path to the browser executable.
   --extension                  run in extension mode, starts CDP relay server
                                for Chrome extension
@@ -335,6 +345,37 @@ When connecting an external agent to the MCP server running in extension mode, u
 ```
 
 For more detailed instructions on using extension mode, see the [Extension Mode Example](examples/extension-mode.md).
+
+#### Running in Electron Mode
+
+To connect to an Electron application, first start your Electron app with remote debugging enabled:
+
+```bash
+# Enable remote debugging on port 9222
+your-electron-app --remote-debugging-port=9222
+```
+
+Then start the MCP server in Electron mode:
+
+```bash
+npx playwright-mcp-advanced --electron --cdp-endpoint http://localhost:9222 --port 3000
+```
+
+This configuration will:
+- Connect to your Electron app via CDP (`--electron --cdp-endpoint http://localhost:9222`)
+- Use existing browser contexts and pages from your Electron app
+- Enable HTTP server for MCP communication (`--port 3000`)
+
+##### Agent Configuration for Electron Mode
+
+```json
+{
+    "url": "http://localhost:3000/sse",
+    "type": "sse"
+}
+```
+
+For a complete example including Electron app setup, see the [Electron Mode Example](examples/electron-example.md).
 
 #### Running in Standard Mode (stdio)
 

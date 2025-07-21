@@ -32,6 +32,7 @@ export type CLIOptions = {
   cdpEndpoint?: string;
   config?: string;
   device?: string;
+  electron?: boolean;
   executablePath?: string;
   extension?: boolean;
   headless?: boolean;
@@ -106,6 +107,13 @@ export function validateConfig(config: FullConfig, cliOptions: CLIOptions) {
   if (cliOptions.extension) {
     if (config.browser?.browserName !== 'chromium')
       throw new Error('Extension mode is only supported for Chromium browsers.');
+  }
+  
+  if (cliOptions.electron) {
+    if (!cliOptions.cdpEndpoint)
+      throw new Error('Electron mode requires --cdp-endpoint option to be specified.');
+    if (config.browser?.browserName !== 'chromium')
+      throw new Error('Electron mode is only supported for Chromium browsers.');
   }
 }
 
@@ -190,6 +198,7 @@ export async function configFromCLIOptions(cliOptions: CLIOptions): Promise<Conf
       launchOptions,
       contextOptions,
       cdpEndpoint: cliOptions.cdpEndpoint,
+      electron: cliOptions.electron,
     },
     server: {
       port: cliOptions.port,

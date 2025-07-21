@@ -35,6 +35,7 @@ program
     .option('--cdp-endpoint <endpoint>', 'CDP endpoint to connect to.')
     .option('--config <path>', 'path to the configuration file.')
     .option('--device <device>', 'device to emulate, for example: "iPhone 15"')
+    .option('--electron', 'enable Electron application support, requires --cdp-endpoint')
     .option('--extension', 'run in extension mode, starts CDP relay server for Chrome extension')
     .option('--executable-path <path>', 'path to the browser executable.')
     .option('--headless', 'run browser in headless mode, headed by default')

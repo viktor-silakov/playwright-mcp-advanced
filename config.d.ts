@@ -63,6 +63,12 @@ export type Config = {
      * Remote endpoint to connect to an existing Playwright server.
      */
     remoteEndpoint?: string;
+
+    /**
+     * Enable Electron application support. Requires --cdp-endpoint to be specified.
+     * In Electron mode, the browser context is obtained from existing contexts.
+     */
+    electron?: boolean;
   },
 
   server?: {
