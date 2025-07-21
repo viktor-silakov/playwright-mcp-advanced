@@ -15,7 +15,8 @@
  */
 
 import { z } from 'zod';
-import { defineTool } from './tool.js';
+import { defineTool } from '../tools/tool.js';
+import type { Context } from '../context.js';
 
 const elementSchema = z.object({
   element: z.string().describe('Human-readable element description used to obtain permission to interact with the element'),
@@ -34,7 +35,7 @@ const mouseMove = defineTool({
     type: 'readOnly',
   },
 
-  handle: async (context, params) => {
+  handle: async (context: Context, params: z.infer<typeof elementSchema> & { x: number; y: number }) => {
     const tab = context.currentTabOrDie();
     const code = [
       `// Move mouse to (${params.x}, ${params.y})`,
@@ -63,7 +64,7 @@ const mouseClick = defineTool({
     type: 'destructive',
   },
 
-  handle: async (context, params) => {
+  handle: async (context: Context, params: z.infer<typeof elementSchema> & { x: number; y: number }) => {
     const tab = context.currentTabOrDie();
     const code = [
       `// Click mouse at coordinates (${params.x}, ${params.y})`,
@@ -100,7 +101,7 @@ const mouseDrag = defineTool({
     type: 'destructive',
   },
 
-  handle: async (context, params) => {
+  handle: async (context: Context, params: z.infer<typeof elementSchema> & { startX: number; startY: number; endX: number; endY: number }) => {
     const tab = context.currentTabOrDie();
 
     const code = [

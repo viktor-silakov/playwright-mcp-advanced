@@ -23,8 +23,15 @@ test('browser_navigate', async ({ client, server }) => {
     arguments: { url: server.HELLO_WORLD },
   });
   
-  // Проверяем, что навигация выполнена корректно
-  expect(navResult).toContainTextContent(`// Navigate to ${server.HELLO_WORLD}`);
+  // Проверяем, что навигация выполнена корректно (поддерживаем как оригинальную, так и enhanced версию)
+  const hasOriginalComment = navResult.content.some(item => 
+    item.type === 'text' && item.text.includes(`// Navigate to ${server.HELLO_WORLD}`)
+  );
+  const hasEnhancedComment = navResult.content.some(item => 
+    item.type === 'text' && item.text.includes(`// Enhanced Navigate Plugin - Navigate to ${server.HELLO_WORLD}`)
+  );
+  
+  expect(hasOriginalComment || hasEnhancedComment).toBe(true);
   expect(navResult).toContainTextContent(`await page.goto('${server.HELLO_WORLD}')`);
   
   // Проверяем, что URL и заголовок страницы корректны

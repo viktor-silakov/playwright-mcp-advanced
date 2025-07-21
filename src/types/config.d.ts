@@ -117,4 +117,24 @@ export type Config = {
    * Whether to send image responses to the client. Can be "allow", "omit", or "auto". Defaults to "auto", which sends images if the client can display them.
    */
   imageResponses?: 'allow' | 'omit';
+
+  /**
+   * Plugin configuration.
+   */
+  plugins?: {
+    /**
+     * Path to the plugins folder. Default is './plugins' relative to the project root.
+     */
+    folder?: string;
+
+    /**
+     * List of enabled plugins. If not specified, all found plugins are enabled.
+     */
+    enabled?: string[];
+
+    /**
+     * List of disabled plugins. Takes precedence over enabled list.
+     */
+    disabled?: string[];
+  };
 };

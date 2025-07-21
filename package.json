@@ -33,18 +33,18 @@
     "e2e-demo": "playwright test --project=e2e-demo",
     "e2e-real": "playwright test --project=e2e-real",
     "run-server": "tsx src/browserServer.ts",
-    "extension": "node cli.js --extension --port 3000 --browser chromium --vision",
+    "extension": "node dist/cli.js --extension --port 3000 --browser chromium --vision",
     "extension:start": "./start-extension-mode.sh",
     "dev": "mcp-server-playwright",
     "dev-watch": "tsx watch src/program.ts",
-    "clean": "rm -rf lib",
+    "clean": "rm -rf dist",
     "release": "npm run clean && npm run update-readme && npm run build && npm run test && release-it  --increment"
   },
   "exports": {
     "./package.json": "./package.json",
     ".": {
-      "types": "./index.d.ts",
-      "default": "./index.js"
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "dependencies": {
@@ -76,6 +76,6 @@
     "typescript": "^5.8.2"
   },
   "bin": {
-    "mcp-server-playwright": "cli.js"
+    "mcp-server-playwright": "dist/cli.js"
   }
 }

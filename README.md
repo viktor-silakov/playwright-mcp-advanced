@@ -15,24 +15,28 @@ A Model Context Protocol (MCP) server that provides browser automation capabilit
 This advanced version includes additional capabilities not available in the original Playwright MCP:
 
 #### 📸 Enhanced Screenshot Tools
+
 - **Full page screenshots** - Capture entire scrollable page content with `fullPage: true`
 - **Element screenshots by locator** - Screenshot specific elements using Playwright locators (`#id`, `.class`, `text=Hello`)
 - **Multiple element screenshots** - Capture multiple elements simultaneously with locator arrays
 - **Vision mode enhancements** - All screenshot capabilities available in vision mode
 
 #### 🔍 HTML Content Extraction
+
 - **`browser_get_html_content`** - Extract HTML content from the entire page or specific elements
 - **`browser_get_outer_html`** - Get complete element HTML including the element tag itself
 - **Batch processing** - Extract HTML from multiple elements in parallel
 - **Error handling** - Graceful handling of missing elements
 
 #### 📋 Element Snapshot Tools
+
 - **`browser_element_snapshot`** - Capture accessibility snapshots of specific elements by locator(s)
 - **Structured element data** - Get tag names, text content, attributes, and visibility status
 - **Multiple element snapshots** - Process multiple elements simultaneously with locator arrays
 - **YAML formatted output** - Consistent format matching the main page snapshot tool
 
 #### 💡 Key Improvements
+
 - **Parallel execution** - Multiple operations execute simultaneously for better performance
 - **Smart validation** - Prevents conflicting parameter combinations
 - **Flexible locators** - Support for any Playwright locator syntax
@@ -41,6 +45,7 @@ This advanced version includes additional capabilities not available in the orig
 - **Vision mode compatibility** - All HTML extraction tools work in both snapshot and vision modes
 
 #### 🔗 Chrome Extension Mode
+
 - **`--extension`** - Connect to existing Chrome tabs through a Chrome extension
 - **CDP Relay Server** - Bridge between Chrome extension and MCP server
 - **Live Session Control** - Work with authenticated sessions and existing browser state
@@ -49,6 +54,7 @@ This advanced version includes additional capabilities not available in the orig
 - **Smart Redirect Handling** - Automatically updates targetInfo after redirects
 
 #### ⚡ Electron Application Support
+
 - **`--electron`** - Connect to existing Electron applications with remote debugging enabled
 - **Native App Automation** - Control and test Electron apps using the same MCP protocol
 - **Context Reuse** - Uses existing browser contexts and pages from running Electron apps
@@ -57,6 +63,7 @@ This advanced version includes additional capabilities not available in the orig
 - **No Browser Launch** - Connects to your running Electron app instead of launching new browsers
 
 ### Requirements
+
 - Node.js 18 or newer
 - VS Code, Cursor, Windsurf, Claude Desktop or any other MCP client
 
@@ -65,6 +72,7 @@ This advanced version includes additional capabilities not available in the orig
 To use this advanced version locally:
 
 1. **Clone and build the project:**
+
    ```bash
    git clone <repository-url>
    cd playwright-mcp-advanced
@@ -83,9 +91,13 @@ node utils/generate-links.js
 
 First, install the Playwright MCP server with your client.
 
-**Standard config** works in most of the tools:
+#### Configuration Options
 
-#### For the original Playwright MCP:
+<details>
+<summary><b>📦 Standard Installation (NPX)</b></summary>
+
+**For the original Playwright MCP:**
+
 ```js
 {
   "mcpServers": {
@@ -99,7 +111,8 @@ First, install the Playwright MCP server with your client.
 }
 ```
 
-#### For this advanced version (local development):
+**For this advanced version (local development):**
+
 ```js
 {
   "mcpServers": {
@@ -113,10 +126,13 @@ First, install the Playwright MCP server with your client.
 }
 ```
 
+</details>
+
+#### IDE-Specific Installation
+
 [<img src="https://img.shields.io/badge/VS_Code-VS_Code?style=flat-square&label=Install%20Server&color=0098FF" alt="Install in VS Code">](https://insiders.vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522playwright%2522%252C%2522command%2522%253A%2522npx%2522%252C%2522args%2522%253A%255B%2522%2540playwright%252Fmcp%2540latest%2522%255D%257D) [<img alt="Install in VS Code Insiders" src="https://img.shields.io/badge/VS_Code_Insiders-VS_Code_Insiders?style=flat-square&label=Install%20Server&color=24bfa5">](https://insiders.vscode.dev/redirect?url=vscode-insiders%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522playwright%2522%252C%2522command%2522%253A%2522npx%2522%252C%2522args%2522%253A%255B%2522%2540playwright%252Fmcp%2540latest%2522%255D%257D)
 
-
-<details><summary><b>Install in VS Code</b></summary>
+<details><summary><b>VS Code</b></summary>
 
 You can also install the Playwright MCP server using the VS Code CLI:
 
@@ -126,10 +142,11 @@ code --add-mcp '{"name":"playwright","command":"npx","args":["playwright-mcp-adv
 ```
 
 After installation, the Playwright MCP server will be available for use with your GitHub Copilot agent in VS Code.
+
 </details>
 
 <details>
-<summary><b>Install in Cursor</b></summary>
+<summary><b>Cursor</b></summary>
 
 #### For original Playwright MCP:
 
@@ -166,12 +183,13 @@ Go to `Cursor Settings` -> `MCP` -> `Add new MCP Server`. Use the following conf
   }
 }
 ```
+
 </details>
 
 <details>
-<summary><b>Install in Windsurf</b></summary>
+<summary><b>Windsurf</b></summary>
 
-Follow Windsuff MCP [documentation](https://docs.windsurf.com/windsurf/cascade/mcp). Use following configuration:
+Follow Windsurf MCP [documentation](https://docs.windsurf.com/windsurf/cascade/mcp). Use following configuration:
 
 ```js
 {
@@ -185,14 +203,16 @@ Follow Windsuff MCP [documentation](https://docs.windsurf.com/windsurf/cascade/m
   }
 }
 ```
+
 </details>
 
 <details>
-<summary><b>Install in Claude Desktop</b></summary>
+<summary><b>Claude Desktop</b></summary>
 
 Follow the MCP install [guide](https://modelcontextprotocol.io/quickstart/user).
 
 #### For original Playwright MCP:
+
 ```js
 {
   "mcpServers": {
@@ -207,6 +227,7 @@ Follow the MCP install [guide](https://modelcontextprotocol.io/quickstart/user).
 ```
 
 #### For this advanced version (local):
+
 ```js
 {
   "mcpServers": {
@@ -219,27 +240,7 @@ Follow the MCP install [guide](https://modelcontextprotocol.io/quickstart/user).
   }
 }
 ```
-</details>
 
-<details>
-<summary><b>Install in Qodo Gen</b></summary>
-
-Open [Qodo Gen](https://docs.qodo.ai/qodo-documentation/qodo-gen) chat panel in VSCode or IntelliJ → Connect more tools → + Add new MCP → Paste the following configuration:
-
-```js
-{
-  "mcpServers": {
-    "playwright": {
-      "command": "npx",
-      "args": [
-        "playwright-mcp-advanced@latest"
-      ]
-    }
-  }
-}
-```
-
-Click <code>Save</code>.
 </details>
 
 ### Configuration
@@ -310,6 +311,7 @@ Playwright MCP server supports following arguments. They can be provided in the 
 When using the Chrome Extension mode (`--extension`), the CDP Relay now intelligently handles redirects to ensure that the targetInfo (URL and title) always matches the actual page being displayed. This solves issues where the reported URL might not match the actual page after redirects.
 
 Key features:
+
 - **Automatic URL Updates**: The targetInfo is automatically updated after HTTP redirects, meta refreshes, and JavaScript redirects
 - **Title Synchronization**: Page titles are kept in sync with the actual page content
 - **Event-Based Detection**: Monitors CDP events to detect navigation and redirect events
@@ -319,102 +321,134 @@ For more details, see the [CDP Relay Redirect Handling documentation](docs/cdp-r
 
 ### MCP Server Configuration Examples
 
-#### Running in Extension Mode
+#### Communication Modes
 
-You can quickly start the MCP server in extension mode using the provided npm script:
+<details>
+<summary><b>📡 SSE Transport (for Extension/Electron/Standalone modes)</b></summary>
+
+For all modes that use HTTP SSE transport, use this agent configuration:
+
+```json
+{
+  "url": "http://localhost:3000/sse",
+  "type": "sse"
+}
+```
+
+_Note: Replace `3000` with your chosen port number._
+
+</details>
+
+<details>
+<summary><b>📤 Standard Mode (stdio)</b></summary>
+
+For standard stdio communication:
+
+```json
+{
+  "command": "npx",
+  "args": [
+    "playwright-mcp-advanced",
+    "--browser",
+    "chrome",
+    "--vision",
+    "--isolated"
+  ]
+}
+```
+
+For local development:
+
+```json
+{
+  "command": "node",
+  "args": [
+    "/absolute/path/to/playwright-mcp-advanced/cli.js",
+    "--browser",
+    "chrome",
+    "--vision",
+    "--isolated"
+  ]
+}
+```
+
+</details>
+
+#### Specialized Running Modes
+
+<details>
+<summary><b>🔌 Extension Mode</b></summary>
+
+Quick start using npm script:
 
 ```bash
 npm run extension
 ```
 
-This will start the server with the following configuration:
-- Extension mode enabled (`--extension`)
-- Port 3000 (`--port 3000`)
-- Using Chromium browser (`--browser chromium`)
-- Vision mode enabled (`--vision`)
-
-##### External Agent Configuration (SSE)
-
-When connecting an external agent to the MCP server running in extension mode, use the following configuration:
-
-```json
-{
-    "url": "http://localhost:3000/sse",
-    "type": "sse"
-}
-```
-
-For more detailed instructions on using extension mode, see the [Extension Mode Example](examples/extension-mode.md).
-
-#### Running in Electron Mode
-
-To connect to an Electron application, first start your Electron app with remote debugging enabled:
+Or manually:
 
 ```bash
-# Enable remote debugging on port 9222
+npx playwright-mcp-advanced --extension --port 3000 --browser chromium --vision
+```
+
+**Features enabled:**
+
+- Extension mode (`--extension`)
+- SSE transport on port 3000
+- Chrome extension bridge
+- Vision mode for screenshots
+
+For detailed setup instructions, see the [Extension Mode Example](examples/extension-mode.md).
+
+</details>
+
+<details>
+<summary><b>⚡ Electron Mode</b></summary>
+
+1. **Start your Electron app with remote debugging:**
+
+```bash
 your-electron-app --remote-debugging-port=9222
 ```
 
-Then start the MCP server in Electron mode:
+2. **Start MCP server in Electron mode:**
 
 ```bash
 npx playwright-mcp-advanced --electron --cdp-endpoint http://localhost:9222 --port 3000
 ```
 
-This configuration will:
-- Connect to your Electron app via CDP (`--electron --cdp-endpoint http://localhost:9222`)
-- Use existing browser contexts and pages from your Electron app
-- Enable HTTP server for MCP communication (`--port 3000`)
+**Features enabled:**
 
-##### Agent Configuration for Electron Mode
+- Connects to existing Electron app via CDP
+- Uses existing browser contexts and pages
+- SSE transport on port 3000
 
-```json
+For complete setup guide, see the [Electron Mode Example](examples/electron-example.md).
+
+</details>
+
+<details>
+<summary><b>🖥️ Standalone Server Mode</b></summary>
+
+For headless environments or worker processes:
+
+```bash
+npx playwright-mcp-advanced --port 8931
+```
+
+Then configure your MCP client with SSE endpoint:
+
+```js
 {
-    "url": "http://localhost:3000/sse",
-    "type": "sse"
+  "mcpServers": {
+    "playwright": {
+      "url": "http://localhost:8931/sse"
+    }
+  }
 }
 ```
 
-For a complete example including Electron app setup, see the [Electron Mode Example](examples/electron-example.md).
-
-#### Running in Standard Mode (stdio)
-
-For standard mode using stdio communication, you can use the following configuration:
-
-```json
-{
-    "command": "node",
-    "args": [
-        "/Users/a1/Projects/playwright-mcp-advanced/cli.js",
-        "--browser",
-        "chrome",
-        "--vision",
-        "--isolated"
-    ]
-}
-```
-
-This configuration:
-- Uses the `node` command to run the CLI script
-- Specifies the absolute path to the CLI script
-- Uses Chrome browser (`--browser chrome`)
-- Enables vision mode (`--vision`)
-- Runs in isolated mode (`--isolated`) to prevent persistence between sessions
-
-You should adjust the path to match your local installation. For a globally installed package, you can use:
-
-```json
-{
-    "command": "npx",
-    "args": [
-        "playwright-mcp-advanced",
-        "--browser",
-        "chrome",
-        "--vision",
-        "--isolated"
-    ]
-}
-```
+</details>
 
 ### User profile
 
@@ -538,35 +572,15 @@ npx playwright-mcp-advanced@latest --config path/to/config.json
     // List of origins to block the browser to request. Origins matching both `allowedOrigins` and `blockedOrigins` will be blocked.
     blockedOrigins?: string[];
   };
- 
+
   /**
    * Do not send image responses to the client.
    */
   noImageResponses?: boolean;
 }
 ```
+
 </details>
-
-### Standalone MCP server
-
-When running headed browser on system w/o display or from worker processes of the IDEs,
-run the MCP server from environment with the DISPLAY and pass the `--port` flag to enable SSE transport.
-
-```bash
-npx playwright-mcp-advanced@latest --port 8931
-```
-
-And then in MCP client config, set the `url` to the SSE endpoint:
-
-```js
-{
-  "mcpServers": {
-    "playwright": {
-      "url": "http://localhost:8931/sse"
-    }
-  }
-}
-```
 
 <details>
 <summary><b>Docker</b></summary>
@@ -589,28 +603,32 @@ You can build the Docker image yourself.
 ```
 docker build -t mcr.microsoft.com/playwright/mcp .
 ```
+
 </details>
 
 <details>
 <summary><b>Programmatic usage</b></summary>
 
 ```js
-import http from 'http';
+import http from "http";
 
-import { createConnection } from 'playwright-mcp-advanced';
-import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
+import { createConnection } from "playwright-mcp-advanced";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 
 http.createServer(async (req, res) => {
   // ...
 
   // Creates a headless Playwright MCP server with SSE transport
-  const connection = await createConnection({ browser: { launchOptions: { headless: true } } });
-  const transport = new SSEServerTransport('/messages', res);
+  const connection = await createConnection({
+    browser: { launchOptions: { headless: true } },
+  });
+  const transport = new SSEServerTransport("/messages", res);
   await connection.sever.connect(transport);
 
   // ...
 });
 ```
+
 </details>
 
 ## Chrome Extension Mode ✅ **FULLY TESTED & WORKING**
@@ -618,9 +636,10 @@ http.createServer(async (req, res) => {
 The Chrome Extension mode allows you to connect the MCP server to existing Chrome tabs through a Chrome extension. This feature has been **thoroughly tested and verified working** with complete CDP (Chrome DevTools Protocol) integration.
 
 **Verified capabilities:**
+
 - ✅ Real-time browser control through Chrome extension
 - ✅ Navigation and page interaction (`browser_navigate`, `browser_click`)
-- ✅ Content extraction (`browser_get_html_content`, `browser_snapshot`)  
+- ✅ Content extraction (`browser_get_html_content`, `browser_snapshot`)
 - ✅ Screenshot capture (`browser_screen_capture`)
 - ✅ Session management with automatic reconnection
 - ✅ Full Playwright API compatibility through CDP relay
@@ -694,10 +713,25 @@ Once connected, you can use all MCP tools like `browser_navigate`, `browser_clic
 
 The tools are available in two modes:
 
-1. **Snapshot Mode** (default): Uses accessibility snapshots for better performance and reliability
-2. **Vision Mode**: Uses screenshots for visual-based interactions
+<details>
+<summary><b>🎯 Snapshot Mode (default)</b></summary>
 
-To use Vision Mode, add the `--vision` flag when starting the server:
+- Uses accessibility snapshots for better performance and reliability
+- Faster and more lightweight than vision mode
+- No screenshots required
+- Works purely with structured data
+- Better for automation and testing
+</details>
+
+<details>
+<summary><b>👁️ Vision Mode</b></summary>
+
+- Uses screenshots for visual-based interactions
+- Best for computer use models that interact with X,Y coordinates
+- Enables coordinate-based clicking and interaction
+- Perfect for visual debugging and complex UI interactions
+
+**Enable Vision Mode by adding the `--vision` flag:**
 
 ```js
 {
@@ -713,10 +747,17 @@ To use Vision Mode, add the `--vision` flag when starting the server:
 }
 ```
 
-Vision Mode works best with the computer use models that are able to interact with elements using
-X Y coordinate space, based on the provided screenshot.
+**Additional Vision-specific tools:**
 
-**Note:** All HTML content extraction tools (`browser_get_html_content`, `browser_get_outer_html`) are also available in Vision Mode, providing the same functionality regardless of the mode used.
+- `browser_screen_capture` - Enhanced screenshot capture with locator support
+- `browser_screen_click` - Click at X,Y coordinates
+- `browser_screen_drag` - Drag between coordinates
+- `browser_screen_move_mouse` - Move mouse to coordinates
+- `browser_screen_type` - Type text in vision mode
+
+**Note:** All HTML extraction tools (`browser_get_html_content`, `browser_get_outer_html`) work in both modes. Most interaction tools like `browser_press_key`, `browser_wait_for`, `browser_file_upload`, and `browser_handle_dialog` are shared between modes.
+
+</details>
 
 <!--- Tools generated by update-readme.ts -->
 
@@ -1024,7 +1065,7 @@ X Y coordinate space, based on the provided screenshot.
 </details>
 
 <details>
-<summary><b>Vision mode</b></summary>
+<summary><b>Vision mode (Coordinate-based tools)</b></summary>
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
@@ -1083,85 +1124,9 @@ X Y coordinate space, based on the provided screenshot.
     - `submit` (boolean, optional): Whether to submit entered text (press Enter after)
   - Read-only: **false**
 
-<!-- NOTE: This has been generated via update-readme.ts -->
-
-- **browser_press_key**
-  - Title: Press a key
-  - Description: Press a key on the keyboard
-  - Parameters:
-    - `key` (string): Name of the key to press or a character to generate, such as `ArrowLeft` or `a`
-  - Read-only: **false**
-
-<!-- NOTE: This has been generated via update-readme.ts -->
-
-- **browser_wait_for**
-  - Title: Wait for
-  - Description: Wait for text to appear or disappear or a specified time to pass
-  - Parameters:
-    - `time` (number, optional): The time to wait in seconds
-    - `text` (string, optional): The text to wait for
-    - `textGone` (string, optional): The text to wait for to disappear
-  - Read-only: **true**
-
-<!-- NOTE: This has been generated via update-readme.ts -->
-
-- **browser_file_upload**
-  - Title: Upload files
-  - Description: Upload one or multiple files
-  - Parameters:
-    - `paths` (array): The absolute paths to the files to upload. Can be a single file or multiple files.
-  - Read-only: **false**
-
-<!-- NOTE: This has been generated via update-readme.ts -->
-
-- **browser_handle_dialog**
-  - Title: Handle a dialog
-  - Description: Handle a dialog
-  - Parameters:
-    - `accept` (boolean): Whether to accept the dialog.
-    - `promptText` (string, optional): The text of the prompt in case of a prompt dialog.
-  - Read-only: **false**
-
-<!-- NOTE: This has been generated via update-readme.ts -->
-
-- **browser_get_html_content** 🆕
-  - Title: Get HTML content
-  - Description: Get HTML content of the current page or specific elements. Returns full page HTML by default, or HTML of specific elements when locator(s) provided.
-  - **Enhancement**: Extract HTML content from page or specific elements with flexible locator support
-  - Parameters:
-    - `locator` (string, optional): Playwright locator string to get HTML content of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
-    - `locators` (array, optional): Array of Playwright locator strings to get HTML content of multiple elements. Cannot be combined with locator parameter.
-  - Read-only: **true**
-
-<!-- NOTE: This has been generated via update-readme.ts -->
-
-- **browser_get_outer_html** 🆕
-  - Title: Get outer HTML content
-  - Description: Get outer HTML content of specific elements (includes the element tag itself). Requires locator(s) to be specified.
-  - **Enhancement**: Get complete element HTML including the element tag itself
-  - Parameters:
-    - `locator` (string, optional): Playwright locator string to get outer HTML content of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
-    - `locators` (array, optional): Array of Playwright locator strings to get outer HTML content of multiple elements. Cannot be combined with locator parameter.
-  - Read-only: **true**
-
 </details>
 
-
 <!--- End of tools generated section -->
-
-
-## Recent Fixes
-
-### CDP Content Parsing Issue (v0.0.31+)
-
-**Fixed**: Critical error in extension mode where `page.content()` returned CDP objects instead of strings, causing `TypeError: pageContent.match is not a function`.
-
-**Solution**: Implemented robust content extraction utility that handles both normal Playwright responses and CDP relay responses:
-- ✅ **Backward compatible** - Works with both string and object responses
-- ✅ **Comprehensive coverage** - Fixes all affected code paths (`context.ts`, `pageSnapshot.ts`, `html.ts`)  
-- ✅ **Full test coverage** - Added e2e tests to prevent regression
-
-See [CDP_CONTENT_ISSUE_FIX.md](./CDP_CONTENT_ISSUE_FIX.md) for detailed technical information.
 
 ## License
 

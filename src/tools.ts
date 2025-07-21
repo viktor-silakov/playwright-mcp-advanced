@@ -26,6 +26,7 @@ import mouse from './tools/mouse.js';
 import navigate from './tools/navigate.js';
 import network from './tools/network.js';
 import pdf from './tools/pdf.js';
+import plugins from './tools/plugins.js';
 import snapshot from './tools/snapshot.js';
 import tabs from './tools/tabs.js';
 import screenshot from './tools/screenshot.js';
@@ -33,6 +34,7 @@ import vision from './tools/vision.js';
 import wait from './tools/wait.js';
 
 import type { Tool } from './tools/tool.js';
+import type { PluginManager } from './plugins/manager.js';
 
 export const snapshotTools: Tool<any>[] = [
   ...common,
@@ -47,6 +49,7 @@ export const snapshotTools: Tool<any>[] = [
   ...navigate,
   ...network,
   ...pdf,
+  ...plugins,
   ...screenshot,
   ...snapshot,
   ...tabs,
@@ -66,6 +69,7 @@ export const visionTools: Tool<any>[] = [
   ...navigate,
   ...network,
   ...pdf,
+  ...plugins,
   ...snapshot,
   ...tabs,
   ...vision,
@@ -75,3 +79,29 @@ export const visionTools: Tool<any>[] = [
 export const allTools: Tool<any>[] = [
   ...snapshotTools,
 ];
+
+/**
+ * Get tools with plugin integration and capability filtering.
+ */
+export function getToolsWithPlugins(
+  config: { capabilities?: string[] },
+  pluginManager?: PluginManager
+): Tool<any>[] {
+  // Select the appropriate tool set based on capabilities
+  let baseTools = snapshotTools;
+  if (config.capabilities?.includes('vision')) {
+    baseTools = visionTools;
+  }
+  
+  // Filter tools by capabilities
+  const filteredTools = baseTools.filter(tool => 
+    tool.capability.startsWith('core') || config.capabilities?.includes(tool.capability)
+  );
+
+  // Apply plugin integration if plugin manager is available
+  if (pluginManager) {
+    return pluginManager.getAvailableTools(filteredTools);
+  }
+
+  return filteredTools;
+}

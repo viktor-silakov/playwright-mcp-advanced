@@ -19,22 +19,22 @@ import { CallToolRequestSchema, ListToolsRequestSchema, Tool as McpTool } from '
 import { zodToJsonSchema } from 'zod-to-json-schema';
 
 import { Context } from './context.js';
-import { allTools, visionTools, snapshotTools } from './tools.js';
+import { getToolsWithPlugins } from './tools.js';
 import { packageJSON } from './package.js';
+import { PluginManager } from './plugins/manager.js';
 
 import { FullConfig } from './config.js';
 
 import type { BrowserContextFactory } from './browserContextFactory.js';
 
-export function createConnection(config: FullConfig, browserContextFactory: BrowserContextFactory): Connection {
-  // Select the appropriate tool set based on capabilities
-  let availableTools = snapshotTools;
-  if (config.capabilities?.includes('vision')) {
-    availableTools = visionTools;
-  }
-  
-  const tools = availableTools.filter(tool => tool.capability.startsWith('core') || config.capabilities?.includes(tool.capability));
-  const context = new Context(tools, config, browserContextFactory);
+export async function createConnection(config: FullConfig, browserContextFactory: BrowserContextFactory): Promise<Connection> {
+  // Initialize plugin manager
+  const pluginManager = new PluginManager(config);
+  await pluginManager.initialize();
+
+  // Get tools with plugin integration
+  const tools = getToolsWithPlugins(config, pluginManager);
+  const context = new Context(tools, config, browserContextFactory, pluginManager);
   const server = new McpServer({ name: 'Playwright', version: packageJSON.version }, {
     capabilities: {
       tools: {},
@@ -80,16 +80,18 @@ export function createConnection(config: FullConfig, browserContextFactory: Brow
     }
   });
 
-  return new Connection(server, context);
+  return new Connection(server, context, pluginManager);
 }
 
 export class Connection {
   readonly server: McpServer;
   readonly context: Context;
+  readonly pluginManager: PluginManager;
 
-  constructor(server: McpServer, context: Context) {
+  constructor(server: McpServer, context: Context, pluginManager: PluginManager) {
     this.server = server;
     this.context = context;
+    this.pluginManager = pluginManager;
     this.server.oninitialized = () => {
       this.context.clientVersion = this.server.getClientVersion();
     };
@@ -98,5 +100,6 @@ export class Connection {
   async close() {
     await this.server.close();
     await this.context.close();
+    await this.pluginManager.cleanup();
   }
 }

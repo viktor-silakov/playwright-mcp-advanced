@@ -15,5 +15,20 @@
  * limitations under the License.
  */
 
-import { createConnection } from './lib/index.js';
-export { createConnection };
+import { spawn } from 'child_process';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const programPath = join(__dirname, 'program.js');
+
+// Запускаем скомпилированный JS файл напрямую
+const child = spawn('node', [programPath, ...process.argv.slice(2)], {
+  stdio: 'inherit'
+});
+
+child.on('close', (code) => {
+  process.exit(code || 0);
+});

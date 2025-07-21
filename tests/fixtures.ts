@@ -24,7 +24,7 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { TestServer } from './testserver/index.ts';
 
-import type { Config } from '../config';
+import type { Config } from '../src/types/config.js';
 import type { BrowserContext } from 'playwright';
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import type { Stream } from 'stream';
@@ -221,7 +221,7 @@ async function createTransport(args: string[], mcpMode: TestOptions['mcpMode']):
     
     let stderrOutput = '';
     
-    const serverProcess = spawn('node', [path.join(path.dirname(__filename), '../cli.js'), ...args], {
+    const serverProcess = spawn('node', [path.join(path.dirname(__filename), '../dist/cli.js'), ...args], {
       stdio: ['pipe', 'pipe', 'pipe'],
       cwd: path.join(path.dirname(__filename), '..'),
       env: {
@@ -309,7 +309,7 @@ async function createTransport(args: string[], mcpMode: TestOptions['mcpMode']):
 
   const transport = new StdioClientTransport({
     command: 'node',
-    args: [path.join(path.dirname(__filename), '../cli.js'), ...args],
+    args: [path.join(path.dirname(__filename), '../dist/cli.js'), ...args],
     cwd: path.join(path.dirname(__filename), '..'),
     stderr: 'pipe',
     env: {

@@ -6,10 +6,18 @@
     "strict": true,
     "module": "NodeNext",
     "rootDir": "src",
-    "outDir": "./lib",
-    "resolveJsonModule": true
+    "outDir": "dist",
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationDir": "dist/types"
   },
   "include": [
-    "src",
+    "src"
   ],
+  "exclude": [
+    "dist",
+    "lib",
+    "tests",
+    "node_modules"
+  ]
 }

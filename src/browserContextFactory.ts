@@ -117,12 +117,12 @@ class IsolatedContextFactory extends BaseContextFactory {
 
   protected override async _doObtainBrowser(): Promise<playwright.Browser> {
     await injectCdpPort(this.browserConfig);
-    const browserType = playwright[this.browserConfig.browserName];
+    const browserType = playwright[this.browserConfig.browserName as keyof typeof playwright] as playwright.BrowserType;
     return browserType.launch({
       ...this.browserConfig.launchOptions,
       handleSIGINT: false,
       handleSIGTERM: false,
-    }).catch(error => {
+    }).catch((error: any) => {
       if (error.message.includes('Executable doesn\'t exist'))
         throw new Error(`Browser specified in your config is not installed. Either install it (likely) or change the config.`);
       throw error;
@@ -158,7 +158,7 @@ class RemoteContextFactory extends BaseContextFactory {
     url.searchParams.set('browser', this.browserConfig.browserName);
     if (this.browserConfig.launchOptions)
       url.searchParams.set('launch-options', JSON.stringify(this.browserConfig.launchOptions));
-    return playwright[this.browserConfig.browserName].connect(String(url));
+    return (playwright[this.browserConfig.browserName as keyof typeof playwright] as playwright.BrowserType).connect(String(url));
   }
 
   protected override async _doCreateContext(browser: playwright.Browser): Promise<playwright.BrowserContext> {
@@ -182,7 +182,7 @@ class PersistentContextFactory implements BrowserContextFactory {
     this._userDataDirs.add(userDataDir);
     testDebug('lock user data dir', userDataDir);
 
-    const browserType = playwright[this.browserConfig.browserName];
+    const browserType = playwright[this.browserConfig.browserName as keyof typeof playwright] as playwright.BrowserType;
     for (let i = 0; i < 5; i++) {
       try {
         const browserContext = await browserType.launchPersistentContext(userDataDir, {

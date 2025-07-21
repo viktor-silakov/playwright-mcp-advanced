@@ -19,7 +19,7 @@ import os from 'os';
 import path from 'path';
 import { devices } from 'playwright';
 
-import type { Config, ToolCapability } from '../config.js';
+import type { Config, ToolCapability } from './types/config.js';
 import type { BrowserContextOptions, LaunchOptions } from 'playwright';
 import { sanitizeForFilePath } from './tools/utils.js';
 
@@ -43,6 +43,7 @@ export type CLIOptions = {
   sandbox: boolean;
   outputDir?: string;
   port?: number;
+  pluginsFolder?: string;
   proxyBypass?: string;
   proxyServer?: string;
   saveTrace?: boolean;
@@ -69,6 +70,9 @@ const defaultConfig: FullConfig = {
     blockedOrigins: undefined,
   },
   server: {},
+  plugins: {
+    folder: './plugins',
+  },
   outputDir: path.join(os.tmpdir(), 'playwright-mcp-output', sanitizeForFilePath(new Date().toISOString())),
 };
 
@@ -82,6 +86,7 @@ export type FullConfig = Config & {
   },
   network: NonNullable<Config['network']>,
   outputDir: string;
+  plugins: NonNullable<Config['plugins']>,
   server: NonNullable<Config['server']>,
 };
 
@@ -209,6 +214,9 @@ export async function configFromCLIOptions(cliOptions: CLIOptions): Promise<Conf
       allowedOrigins: cliOptions.allowedOrigins,
       blockedOrigins: cliOptions.blockedOrigins,
     },
+    plugins: {
+      folder: cliOptions.pluginsFolder,
+    },
     saveTrace: cliOptions.saveTrace,
     outputDir: cliOptions.outputDir,
     imageResponses: cliOptions.imageResponses,
@@ -267,6 +275,10 @@ function mergeConfig(base: FullConfig, overrides: Config): FullConfig {
     network: {
       ...pickDefined(base.network),
       ...pickDefined(overrides.network),
+    },
+    plugins: {
+      ...pickDefined(base.plugins),
+      ...pickDefined(overrides.plugins),
     },
     server: {
       ...pickDefined(base.server),

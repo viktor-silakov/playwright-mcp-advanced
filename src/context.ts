@@ -26,6 +26,7 @@ import { outputFile } from './config.js';
 import type { ModalState, Tool, ToolActionResult } from './tools/tool.js';
 import type { FullConfig } from './config.js';
 import type { BrowserContextFactory } from './browserContextFactory.js';
+import type { PluginManager } from './plugins/manager.js';
 
 type PendingAction = {
   dialogShown: ManualPromise<void>;
@@ -36,6 +37,7 @@ const testDebug = debug('pw:mcp:test');
 export class Context {
   readonly tools: Tool[];
   readonly config: FullConfig;
+  readonly pluginManager?: PluginManager;
   private _browserContextPromise: Promise<{ browserContext: playwright.BrowserContext, close: () => Promise<void> }> | undefined;
   private _browserContextFactory: BrowserContextFactory;
   private _tabs: Tab[] = [];
@@ -45,9 +47,10 @@ export class Context {
   private _downloads: { download: playwright.Download, finished: boolean, outputFile: string }[] = [];
   clientVersion: { name: string; version: string; } | undefined;
 
-  constructor(tools: Tool[], config: FullConfig, browserContextFactory: BrowserContextFactory) {
+  constructor(tools: Tool[], config: FullConfig, browserContextFactory: BrowserContextFactory, pluginManager?: PluginManager) {
     this.tools = tools;
     this.config = config;
+    this.pluginManager = pluginManager;
     this._browserContextFactory = browserContextFactory;
     testDebug('create context');
   }

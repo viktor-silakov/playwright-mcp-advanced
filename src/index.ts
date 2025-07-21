@@ -15,18 +15,18 @@
  */
 
 import { createConnection as createConnectionImpl } from './connection.js';
-import type { Connection } from '../index.js';
+import type { Connection } from './types/index.js';
 import { resolveConfig } from './config.js';
 import { contextFactory } from './browserContextFactory.js';
 
-import type { Config } from '../config.js';
+import type { Config } from './types/config.js';
 import type { BrowserContext } from 'playwright';
 import type { BrowserContextFactory } from './browserContextFactory.js';
 
 export async function createConnection(userConfig: Config = {}, contextGetter?: () => Promise<BrowserContext>): Promise<Connection> {
   const config = await resolveConfig(userConfig);
   const factory = contextGetter ? new SimpleBrowserContextFactory(contextGetter) : contextFactory(config.browser);
-  return createConnectionImpl(config, factory);
+  return await createConnectionImpl(config, factory);
 }
 
 class SimpleBrowserContextFactory implements BrowserContextFactory {
