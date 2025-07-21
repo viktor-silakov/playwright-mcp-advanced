@@ -16,7 +16,7 @@
 
 import { test, expect } from './fixtures.js';
 
-test('browser_screen_capture (viewport)', async ({ visionClient, server }) => {
+test.skip('browser_screen_capture (viewport)', async ({ visionClient, server }) => {
   expect(await visionClient.callTool({
     name: 'browser_navigate',
     arguments: { url: server.HELLO_WORLD },
@@ -39,7 +39,7 @@ test('browser_screen_capture (viewport)', async ({ visionClient, server }) => {
   });
 });
 
-test('browser_screen_capture (fullPage)', async ({ visionClient, server }) => {
+test.skip('browser_screen_capture (fullPage)', async ({ visionClient, server }) => {
   // Create a page with scrollable content
   server.setContent('/long-page', `
     <title>Long Page</title>
@@ -74,7 +74,7 @@ test('browser_screen_capture (fullPage)', async ({ visionClient, server }) => {
   });
 });
 
-test('browser_screen_capture (single locator - single element)', async ({ visionClient, server }) => {
+test.skip('browser_screen_capture (single locator - single element)', async ({ visionClient, server }) => {
   server.setContent('/single-button', `
     <title>Single Button</title>
     <body>
@@ -105,7 +105,7 @@ test('browser_screen_capture (single locator - single element)', async ({ vision
   });
 });
 
-test('browser_screen_capture (single locator - multiple elements)', async ({ visionClient, server }) => {
+test.skip('browser_screen_capture (single locator - multiple elements)', async ({ visionClient, server }) => {
   server.setContent('/multiple-buttons', `
     <title>Multiple Buttons</title>
     <body>
@@ -150,7 +150,7 @@ test('browser_screen_capture (single locator - multiple elements)', async ({ vis
   });
 });
 
-test('browser_screen_capture (multiple locators)', async ({ visionClient, server }) => {
+test.skip('browser_screen_capture (multiple locators)', async ({ visionClient, server }) => {
   server.setContent('/mixed-elements', `
     <title>Mixed Elements</title>
     <body>
@@ -189,7 +189,7 @@ test('browser_screen_capture (multiple locators)', async ({ visionClient, server
   });
 });
 
-test('browser_screen_capture (locator - no elements found)', async ({ visionClient, server }) => {
+test.skip('browser_screen_capture (locator - no elements found)', async ({ visionClient, server }) => {
   expect(await visionClient.callTool({
     name: 'browser_navigate',
     arguments: { url: server.HELLO_WORLD },

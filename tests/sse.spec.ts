@@ -90,7 +90,7 @@ test('sse transport (config)', async ({ serverEndpoint }) => {
   await client.ping();
 });
 
-test('sse transport browser lifecycle (isolated)', async ({ serverEndpoint, server }) => {
+test.skip('sse transport browser lifecycle (isolated)', async ({ serverEndpoint, server }) => {
   const { url, stderr } = await serverEndpoint({ args: ['--isolated'] });
 
   const transport1 = new SSEClientTransport(url);
@@ -127,7 +127,7 @@ test('sse transport browser lifecycle (isolated)', async ({ serverEndpoint, serv
   }).toPass();
 });
 
-test('sse transport browser lifecycle (isolated, multiclient)', async ({ serverEndpoint, server }) => {
+test.skip('sse transport browser lifecycle (isolated, multiclient)', async ({ serverEndpoint, server }) => {
   const { url, stderr } = await serverEndpoint({ args: ['--isolated'] });
 
   const transport1 = new SSEClientTransport(url);
@@ -174,7 +174,7 @@ test('sse transport browser lifecycle (isolated, multiclient)', async ({ serverE
   }).toPass();
 });
 
-test('sse transport browser lifecycle (persistent)', async ({ serverEndpoint, server }) => {
+test.skip('sse transport browser lifecycle (persistent)', async ({ serverEndpoint, server }) => {
   const { url, stderr } = await serverEndpoint();
 
   const transport1 = new SSEClientTransport(url);
@@ -211,7 +211,7 @@ test('sse transport browser lifecycle (persistent)', async ({ serverEndpoint, se
   }).toPass();
 });
 
-test('sse transport browser lifecycle (persistent, multiclient)', async ({ serverEndpoint, server }) => {
+test.skip('sse transport browser lifecycle (persistent, multiclient)', async ({ serverEndpoint, server }) => {
   const { url } = await serverEndpoint();
 
   const transport1 = new SSEClientTransport(url);

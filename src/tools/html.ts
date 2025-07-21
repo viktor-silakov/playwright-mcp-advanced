@@ -17,6 +17,7 @@
 import { z } from 'zod';
 
 import { defineTool } from './tool.js';
+import { extractStringFromCDPResponse, extractElementsFromCDPResponse } from '../utils/cdp-content-extractor.js';
 
 const htmlContentSchema = z.object({
   locator: z.string().optional().describe('Playwright locator string to get HTML content of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.'),
@@ -63,7 +64,8 @@ const htmlContent = defineTool({
         const htmlContents = await Promise.all(
           params.locators!.map(async (loc, index) => {
             try {
-              const html = await tab.page.locator(loc).innerHTML();
+              const rawHtml = await tab.page.locator(loc).innerHTML();
+              const html = extractStringFromCDPResponse(rawHtml);
               return `### Element ${index + 1} (${loc}):\n\`\`\`html\n${html}\n\`\`\``;
             } catch (error) {
               return `### Element ${index + 1} (${loc}):\nError: ${(error as Error).message}`;
@@ -87,7 +89,8 @@ const htmlContent = defineTool({
       action = async () => {
         try {
           const locator = tab.page.locator(params.locator!);
-          const elements = await locator.all();
+          const rawElements = await locator.all();
+          const elements = extractElementsFromCDPResponse(rawElements);
 
           if (elements.length === 0) {
             return {
@@ -101,7 +104,8 @@ const htmlContent = defineTool({
           const htmlContents = await Promise.all(
               elements.map(async (element, index) => {
                 try {
-                  const html = await element.innerHTML();
+                  const rawHtml = await element.innerHTML();
+                  const html = extractStringFromCDPResponse(rawHtml);
                   return `### Element ${index + 1} (${params.locator}):\n\`\`\`html\n${html}\n\`\`\``;
                 } catch (error) {
                   return `### Element ${index + 1} (${params.locator}):\nError: ${(error as Error).message}`;
@@ -131,7 +135,8 @@ const htmlContent = defineTool({
       ];
 
       action = async () => {
-        const html = await tab.page.content();
+        const rawHtml = await tab.page.content();
+        const html = extractStringFromCDPResponse(rawHtml);
         return {
           content: [{
             type: 'text' as 'text',
@@ -193,7 +198,8 @@ const outerHtmlContent = defineTool({
         const htmlContents = await Promise.all(
           params.locators!.map(async (loc, index) => {
             try {
-              const html = await tab.page.locator(loc).evaluate((el: Element) => el.outerHTML);
+              const rawHtml = await tab.page.locator(loc).evaluate((el: Element) => el.outerHTML);
+            const html = extractStringFromCDPResponse(rawHtml);
               return `### Element ${index + 1} (${loc}):\n\`\`\`html\n${html}\n\`\`\``;
             } catch (error) {
               return `### Element ${index + 1} (${loc}):\nError: ${(error as Error).message}`;
@@ -217,7 +223,8 @@ const outerHtmlContent = defineTool({
       action = async () => {
         try {
           const locator = tab.page.locator(params.locator!);
-          const elements = await locator.all();
+          const rawElements = await locator.all();
+          const elements = extractElementsFromCDPResponse(rawElements);
 
           if (elements.length === 0) {
             return {
@@ -231,7 +238,8 @@ const outerHtmlContent = defineTool({
           const htmlContents = await Promise.all(
               elements.map(async (element, index) => {
                 try {
-                  const html = await element.evaluate((el: Element) => el.outerHTML);
+                  const rawHtml = await element.evaluate((el: Element) => el.outerHTML);
+                  const html = extractStringFromCDPResponse(rawHtml);
                   return `### Element ${index + 1} (${params.locator}):\n\`\`\`html\n${html}\n\`\`\``;
                 } catch (error) {
                   return `### Element ${index + 1} (${params.locator}):\nError: ${(error as Error).message}`;

@@ -46,6 +46,7 @@ This advanced version includes additional capabilities not available in the orig
 - **Live Session Control** - Work with authenticated sessions and existing browser state
 - **Real-time Interaction** - No need to launch new browser instances
 - **Tab Sharing** - Share active Chrome tabs with the MCP server
+- **Smart Redirect Handling** - Automatically updates targetInfo after redirects
 
 ### Requirements
 - Node.js 18 or newer
@@ -293,6 +294,86 @@ Playwright MCP server supports following arguments. They can be provided in the 
 ```
 
 <!--- End of options generated section -->
+
+### Redirect Handling in CDP Relay
+
+When using the Chrome Extension mode (`--extension`), the CDP Relay now intelligently handles redirects to ensure that the targetInfo (URL and title) always matches the actual page being displayed. This solves issues where the reported URL might not match the actual page after redirects.
+
+Key features:
+- **Automatic URL Updates**: The targetInfo is automatically updated after HTTP redirects, meta refreshes, and JavaScript redirects
+- **Title Synchronization**: Page titles are kept in sync with the actual page content
+- **Event-Based Detection**: Monitors CDP events to detect navigation and redirect events
+- **Reliable Snapshots**: Ensures that snapshots always show the correct URL and title
+
+For more details, see the [CDP Relay Redirect Handling documentation](docs/cdp-relay-redirect-handling.md).
+
+### MCP Server Configuration Examples
+
+#### Running in Extension Mode
+
+You can quickly start the MCP server in extension mode using the provided npm script:
+
+```bash
+npm run extension
+```
+
+This will start the server with the following configuration:
+- Extension mode enabled (`--extension`)
+- Port 3000 (`--port 3000`)
+- Using Chromium browser (`--browser chromium`)
+- Vision mode enabled (`--vision`)
+
+##### External Agent Configuration (SSE)
+
+When connecting an external agent to the MCP server running in extension mode, use the following configuration:
+
+```json
+{
+    "url": "http://localhost:3000/sse",
+    "type": "sse"
+}
+```
+
+For more detailed instructions on using extension mode, see the [Extension Mode Example](examples/extension-mode.md).
+
+#### Running in Standard Mode (stdio)
+
+For standard mode using stdio communication, you can use the following configuration:
+
+```json
+{
+    "command": "node",
+    "args": [
+        "/Users/a1/Projects/playwright-mcp-advanced/cli.js",
+        "--browser",
+        "chrome",
+        "--vision",
+        "--isolated"
+    ]
+}
+```
+
+This configuration:
+- Uses the `node` command to run the CLI script
+- Specifies the absolute path to the CLI script
+- Uses Chrome browser (`--browser chrome`)
+- Enables vision mode (`--vision`)
+- Runs in isolated mode (`--isolated`) to prevent persistence between sessions
+
+You should adjust the path to match your local installation. For a globally installed package, you can use:
+
+```json
+{
+    "command": "npx",
+    "args": [
+        "playwright-mcp-advanced",
+        "--browser",
+        "chrome",
+        "--vision",
+        "--isolated"
+    ]
+}
+```
 
 ### User profile
 
@@ -1026,3 +1107,21 @@ X Y coordinate space, based on the provided screenshot.
 
 
 <!--- End of tools generated section -->
+
+
+## Recent Fixes
+
+### CDP Content Parsing Issue (v0.0.31+)
+
+**Fixed**: Critical error in extension mode where `page.content()` returned CDP objects instead of strings, causing `TypeError: pageContent.match is not a function`.
+
+**Solution**: Implemented robust content extraction utility that handles both normal Playwright responses and CDP relay responses:
+- ✅ **Backward compatible** - Works with both string and object responses
+- ✅ **Comprehensive coverage** - Fixes all affected code paths (`context.ts`, `pageSnapshot.ts`, `html.ts`)  
+- ✅ **Full test coverage** - Added e2e tests to prevent regression
+
+See [CDP_CONTENT_ISSUE_FIX.md](./CDP_CONTENT_ISSUE_FIX.md) for detailed technical information.
+
+## License
+
+This project is licensed under the same terms as the original Playwright MCP.

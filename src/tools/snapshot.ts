@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { defineTool } from './tool.js';
 import * as javascript from '../javascript.js';
 import { generateLocator } from './utils.js';
+import { extractElementsFromCDPResponse, extractStringFromCDPResponse, extractContentFromCDPResponse } from '../utils/cdp-content-extractor.js';
 
 const snapshot = defineTool({
   capability: 'core',
@@ -94,13 +95,29 @@ const elementSnapshot = defineTool({
 
               const text = await locator.textContent();
               const tagName = await locator.evaluate(el => el.tagName.toLowerCase());
-              const attributes = await locator.evaluate(el => {
+              const rawAttributes = await locator.evaluate(el => {
                 const attrs: Record<string, string> = {};
                 for (const attr of el.attributes)
                   attrs[attr.name] = attr.value;
 
                 return attrs;
               });
+              
+              // Fix: Properly handle attributes object extraction
+              let attributes: Record<string, string> = {};
+              try {
+                if (rawAttributes && typeof rawAttributes === 'object' && !Array.isArray(rawAttributes)) {
+                  attributes = rawAttributes as Record<string, string>;
+                } else {
+                  const extracted = extractContentFromCDPResponse(rawAttributes);
+                  if (extracted && typeof extracted === 'object') {
+                    attributes = extracted as Record<string, string>;
+                  }
+                }
+              } catch (e) {
+                console.error('[SNAPSHOT] Error extracting attributes:', e);
+                attributes = {};
+              }
 
               const result = [`### Element ${index + 1} (${loc}):`];
               result.push('```yaml');
@@ -135,7 +152,8 @@ const elementSnapshot = defineTool({
       action = async () => {
         try {
           const locator = tab.page.locator(params.locator!);
-          const elements = await locator.all();
+          const rawElements = await locator.all();
+          const elements = extractElementsFromCDPResponse(rawElements);
 
           if (elements.length === 0) {
             return {
@@ -154,15 +172,34 @@ const elementSnapshot = defineTool({
                     return `### Element ${index + 1} (${params.locator}):\nElement not visible`;
 
 
-                  const text = await element.textContent();
-                  const tagName = await element.evaluate(el => el.tagName.toLowerCase());
-                  const attributes = await element.evaluate(el => {
+                  const rawText = await element.textContent();
+                  const text = extractStringFromCDPResponse(rawText);
+                  const rawTagName = await element.evaluate((el: Element) => el.tagName.toLowerCase());
+                  const tagName = extractStringFromCDPResponse(rawTagName);
+                  const rawAttributes = await element.evaluate((el: Element) => {
                     const attrs: Record<string, string> = {};
                     for (const attr of el.attributes)
                       attrs[attr.name] = attr.value;
 
                     return attrs;
                   });
+                  // Fix: Use direct extraction for objects to avoid string conversion
+                  let attributes: Record<string, string> = {};
+                  try {
+                    // If it's already an object, use it directly
+                    if (rawAttributes && typeof rawAttributes === 'object' && !Array.isArray(rawAttributes)) {
+                      attributes = rawAttributes as Record<string, string>;
+                    } else {
+                      // Otherwise, try to extract from CDP response
+                      const extracted = extractContentFromCDPResponse(rawAttributes);
+                      if (extracted && typeof extracted === 'object') {
+                        attributes = extracted as Record<string, string>;
+                      }
+                    }
+                  } catch (e) {
+                    console.error('[SNAPSHOT] Error extracting attributes:', e);
+                    attributes = {};
+                  }
 
                   const result = [`### Element ${index + 1} (${params.locator}):`];
                   result.push('```yaml');

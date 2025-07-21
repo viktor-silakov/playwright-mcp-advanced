@@ -21,10 +21,14 @@ import { spawnSync } from 'child_process';
 
 // Extension mode only works with Chrome/Chromium
 test.describe('Extension Mode Tests', () => {
+  // Запускаем тесты только для Chrome
+  test.skip(({ browserName }) => browserName !== 'chromium', 'Extension mode tests are only supported in Chrome/Chromium');
   test.use({ mcpBrowser: 'chromium' });
 
 test('extension mode - CDP relay server starts', async ({ startClient }) => {
-    const { client, stderr } = await startClient({ args: ['--extension', '--port=9224'] });
+    // Используем случайный порт, чтобы избежать конфликтов
+    const randomPort = 19000 + Math.floor(Math.random() * 1000);
+    const { client, stderr } = await startClient({ args: ['--extension', `--port=${randomPort}`] });
   
   // Wait a bit for the server to start and log messages
   await new Promise(resolve => setTimeout(resolve, 1000));
@@ -49,7 +53,9 @@ test('extension mode - CDP relay server starts', async ({ startClient }) => {
 });
 
 test('extension mode - capabilities work', async ({ startClient }) => {
-    const { client } = await startClient({ args: ['--extension', '--port=9225'] });
+    // Используем случайный порт, чтобы избежать конфликтов
+    const randomPort = 19000 + Math.floor(Math.random() * 1000);
+    const { client } = await startClient({ args: ['--extension', `--port=${randomPort}`] });
   
   // Test capabilities call by listing available tools
   const result = await client.listTools();
@@ -58,7 +64,9 @@ test('extension mode - capabilities work', async ({ startClient }) => {
 });
 
 test('extension mode - error handling for no connection', async ({ startClient }) => {
-    const { client } = await startClient({ args: ['--extension', '--port=9226'] });
+    // Используем случайный порт, чтобы избежать конфликтов
+    const randomPort = 19000 + Math.floor(Math.random() * 1000);
+    const { client } = await startClient({ args: ['--extension', `--port=${randomPort}`] });
   
   // Test basic functionality - should work even without extension connection
   const tools = await client.listTools();
@@ -70,7 +78,9 @@ test('extension mode - error handling for no connection', async ({ startClient }
 });
 
   test('extension mode - server configuration', async ({ startClient }) => {
-    const { client, stderr } = await startClient({ args: ['--extension', '--port=9227'] });
+    // Используем случайный порт, чтобы избежать конфликтов
+    const randomPort = 19000 + Math.floor(Math.random() * 1000);
+    const { client, stderr } = await startClient({ args: ['--extension', `--port=${randomPort}`] });
   
   // Wait a bit for the server to start and log messages
     await new Promise(resolve => setTimeout(resolve, 1000));

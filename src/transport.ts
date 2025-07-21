@@ -25,9 +25,49 @@ import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 
 import type { AddressInfo } from 'node:net';
 import type { Server } from './server.js';
+import { logger } from './logger.js';
 
 export async function startStdioTransport(server: Server) {
-  await server.createConnection(new StdioServerTransport());
+  logger.log('🚀🚀🚀 Starting MCP STDIO Transport');
+  
+  // Create a custom StdioServerTransport with logging
+  const transport = new StdioServerTransport();
+  
+  // Monkey patch the transport to log messages
+  const originalSend = transport.send;
+  transport.send = function(message: any) {
+    logger.log('💬💬💬 Agent STDIO Message:', JSON.stringify(message, null, 2));
+    return originalSend.call(this, message);
+  };
+  
+  // Monkey patch the handleMessage method to log incoming messages
+  const originalHandleMessage = (transport as any).handleMessage;
+  if (originalHandleMessage) {
+    (transport as any).handleMessage = function(message: string) {
+      try {
+        const parsedMessage = JSON.parse(message);
+        logger.log('💬💬💬 Incoming Agent STDIO Message:', JSON.stringify(parsedMessage, null, 2));
+        
+        // Log specific message types with different emojis
+        if (parsedMessage.type === 'request') {
+          logger.log(`🔄 Agent Request (${parsedMessage.id}):`);
+          if (parsedMessage.params?.name) {
+            logger.log(`🛠️ Tool: ${parsedMessage.params.name}`);
+          }
+          if (parsedMessage.params?.arguments) {
+            logger.log(`📝 Arguments: ${JSON.stringify(parsedMessage.params.arguments, null, 2)}`);
+          }
+        }
+      } catch (error) {
+        logger.error('❌ Error parsing STDIO message:', error);
+      }
+      
+      return originalHandleMessage.call(this, message);
+    };
+  }
+  
+  await server.createConnection(transport);
+  logger.log('🔌 STDIO Transport connected');
 }
 
 const testDebug = debug('pw:mcp:test');
@@ -46,14 +86,43 @@ async function handleSSE(server: Server, req: http.IncomingMessage, res: http.Se
       return res.end('Session not found');
     }
 
+    // Log incoming message from agent
+    let body = '';
+    req.on('data', chunk => {
+      body += chunk.toString();
+    });
+    
+    req.on('end', () => {
+      try {
+        const message = JSON.parse(body);
+        logger.log('💬💬💬 Agent SSE Message:', JSON.stringify(message, null, 2));
+        
+        // Log specific message types with different emojis
+        if (message.type === 'request') {
+          logger.log(`🔄 Agent Request (${message.id}):`);
+          if (message.params?.name) {
+            logger.log(`🛠️ Tool: ${message.params.name}`);
+          }
+          if (message.params?.arguments) {
+            logger.log(`📝 Arguments: ${JSON.stringify(message.params.arguments, null, 2)}`);
+          }
+        }
+      } catch (error) {
+        logger.error('❌ Error parsing SSE message:', error);
+      }
+    });
+
     return await transport.handlePostMessage(req, res);
   } else if (req.method === 'GET') {
     const transport = new SSEServerTransport('/sse', res);
     sessions.set(transport.sessionId, transport);
     testDebug(`create SSE session: ${transport.sessionId}`);
+    logger.log(`💬💬💬 New Agent SSE Session: ${transport.sessionId}`);
+    
     const connection = await server.createConnection(transport);
     res.on('close', () => {
       testDebug(`delete SSE session: ${transport.sessionId}`);
+      logger.log(`💬💬💬 Agent SSE Session Closed: ${transport.sessionId}`);
       sessions.delete(transport.sessionId);
       // eslint-disable-next-line no-console
       void connection.close().catch(e => console.error(e));
@@ -67,6 +136,18 @@ async function handleSSE(server: Server, req: http.IncomingMessage, res: http.Se
 
 async function handleStreamable(server: Server, req: http.IncomingMessage, res: http.ServerResponse, sessions: Map<string, StreamableHTTPServerTransport>) {
   const sessionId = req.headers['mcp-session-id'] as string | undefined;
+  
+  // Log incoming HTTP request
+  logger.log(`💬💬💬 Agent HTTP Request: ${req.method} ${req.url}`);
+  if (sessionId) {
+    logger.log(`🔗 Session ID: ${sessionId}`);
+  }
+  
+  // Log request headers
+  logger.log(`🔤 Headers: ${JSON.stringify(req.headers, null, 2)}`);
+  
+  // Skip detailed request body logging to avoid interfering with stream processing
+  
   if (sessionId) {
     const transport = sessions.get(sessionId);
     if (!transport) {
@@ -82,11 +163,14 @@ async function handleStreamable(server: Server, req: http.IncomingMessage, res: 
       sessionIdGenerator: () => crypto.randomUUID(),
       onsessioninitialized: sessionId => {
         sessions.set(sessionId, transport);
+        logger.log(`💬💬💬 New Agent HTTP Session: ${sessionId}`);
       }
     });
     transport.onclose = () => {
-      if (transport.sessionId)
+      if (transport.sessionId) {
+        logger.log(`💬💬💬 Agent HTTP Session Closed: ${transport.sessionId}`);
         sessions.delete(transport.sessionId);
+      }
     };
     await server.createConnection(transport);
     await transport.handleRequest(req, res);
@@ -113,13 +197,23 @@ export async function startHttpServer(config: { host?: string, port?: number }):
 export function startHttpTransport(httpServer: http.Server, mcpServer: Server) {
   const sseSessions = new Map<string, SSEServerTransport>();
   const streamableSessions = new Map<string, StreamableHTTPServerTransport>();
+  
+  // Log server start with emoji
+  logger.log('🚀🚀🚀 Starting MCP HTTP Server');
+  
   httpServer.on('request', async (req, res) => {
     const url = new URL(`http://localhost${req.url}`);
-    if (url.pathname.startsWith('/mcp'))
+    // logger.log(`💬💬💬 Incoming request: ${req.method} ${url.pathname}`);
+    
+    if (url.pathname.startsWith('/mcp')) {
+      // logger.log('🔌 Handling streamable HTTP request');
       await handleStreamable(mcpServer, req, res, streamableSessions);
-    else
+    } else {
+      // logger.log('📡 Handling SSE request');
       await handleSSE(mcpServer, req, res, url, sseSessions);
+    }
   });
+  
   const url = httpAddressToString(httpServer.address());
   const message = [
     `Listening on ${url}`,
@@ -133,7 +227,14 @@ export function startHttpTransport(httpServer: http.Server, mcpServer: Server) {
     }, undefined, 2),
     'If your client supports streamable HTTP, you can use the /mcp endpoint instead.',
   ].join('\n');
-    // eslint-disable-next-line no-console
+  
+  // Log server info with emoji
+  logger.log('🌐🌐🌐 MCP Server Info:');
+  logger.log(`🔗 Server URL: ${url}`);
+  logger.log(`📡 SSE Endpoint: ${url}/sse`);
+  logger.log(`🔌 Streamable HTTP Endpoint: ${url}/mcp`);
+  
+  // eslint-disable-next-line no-console
   console.error(message);
 }
 

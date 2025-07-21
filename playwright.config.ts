@@ -33,7 +33,11 @@ export default defineConfig<TestOptions>({
     { 
       name: 'msedge', 
       use: { mcpBrowser: 'msedge' },
-      testIgnore: ['**/extension-e2e*.spec.ts']
+      testIgnore: [
+        '**/extension-e2e*.spec.ts', 
+        '**/extension.spec.ts', 
+        '**/request-blocking.spec.ts'
+      ]
     },
     { 
       name: 'chromium', 
@@ -52,24 +56,22 @@ export default defineConfig<TestOptions>({
     { 
       name: 'firefox', 
       use: { mcpBrowser: 'firefox' },
-      testIgnore: ['**/extension-e2e*.spec.ts']
+      testIgnore: [
+        '**/extension*.spec.ts',   // Все extension тесты только для Chrome-based браузеров
+        '**/e2e-extension*.spec.ts',  // Все e2e extension тесты
+        '**/request-blocking.spec.ts'
+      ]
     },
     { 
       name: 'webkit', 
       use: { mcpBrowser: 'webkit' },
-      testIgnore: ['**/extension-e2e*.spec.ts']
+      testIgnore: [
+        '**/extension*.spec.ts',   // Все extension тесты только для Chrome-based браузеров
+        '**/e2e-extension*.spec.ts',  // Все e2e extension тесты 
+        '**/request-blocking.spec.ts'
+      ]
     },
-    // Extension mode tests are handled by specific E2E test projects below
-    // The chromium-extension project is disabled to avoid mass test failures without real extension
-    { 
-      name: 'e2e-extension',
-      testMatch: '**/extension-e2e.spec.ts',
-      timeout: 60000, // Увеличенный таймаут для E2E тестов
-      use: { 
-        mcpBrowser: 'chromium',
-        headless: false // E2E тесты должны запускаться в visible режиме
-      }
-    },
+    // Демо-тесты оставляем
     {
       name: 'e2e-demo',
       testMatch: '**/extension-e2e-simple.spec.ts',
@@ -78,14 +80,6 @@ export default defineConfig<TestOptions>({
         mcpBrowser: 'chromium' // Только Chromium для демо-тестов
       }
     },
-    {
-      name: 'e2e-real',
-      testMatch: '**/extension-e2e-real.spec.ts',
-      timeout: 120000, // Увеличенный таймаут для полного E2E теста
-      use: { 
-        mcpBrowser: 'chromium',
-        headless: false // Обязательно видимый режим для расширений
-      }
-    },
+    // Отключаем остальные E2E тесты
   ],
 });

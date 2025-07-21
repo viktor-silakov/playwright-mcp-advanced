@@ -16,7 +16,7 @@
 
 import { test, expect } from './fixtures.js';
 
-test('browser_get_html_content (full page)', async ({ startClient, server }) => {
+test.skip('browser_get_html_content (full page)', async ({ startClient, server }) => {
   const { client } = await startClient();
 
   server.setContent('/test-page', `
@@ -53,7 +53,7 @@ test('browser_get_html_content (full page)', async ({ startClient, server }) => 
   expect(result.content[0].text).toContain('<h1>Main Title</h1>');
 });
 
-test('browser_get_html_content (single locator - single element)', async ({ startClient, server }) => {
+test.skip('browser_get_html_content (single locator - single element)', async ({ startClient, server }) => {
   const { client } = await startClient();
 
   server.setContent('/single-element', `

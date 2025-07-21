@@ -20,6 +20,7 @@ import { defineTool } from './tool.js';
 import * as javascript from '../javascript.js';
 import { outputFile } from '../config.js';
 import { generateLocator } from './utils.js';
+import { extractElementsFromCDPResponse, extractBufferFromCDPResponse } from '../utils/cdp-content-extractor.js';
 
 import type * as playwright from 'playwright';
 
@@ -50,7 +51,7 @@ const screenshotSchema = z.object({
 const screenshot = defineTool({
   capability: 'core',
   schema: {
-    name: 'browser_take_screenshot',
+    name: 'browser_screen_capture',
     title: 'Take a screenshot',
     description: `Take a screenshot of the current page. You can't perform actions based on the screenshot, use browser_snapshot for actions.`,
     inputSchema: screenshotSchema,
@@ -105,38 +106,72 @@ const screenshot = defineTool({
 
     const includeBase64 = context.clientSupportsImages();
     const action = async () => {
+      console.log('[DEBUG] Screenshot action called, includeBase64:', includeBase64);
       if (params.locator) {
+        console.log('[DEBUG] Using locator:', params.locator);
         const locatorElement = tab.page.locator(params.locator);
-        const elements = await locatorElement.all();
+        console.log('[DEBUG] Created locator element');
+        const rawElements = await locatorElement.all();
+        console.log('[DEBUG] Raw elements from locator.all():', typeof rawElements, 'Length:', rawElements?.length);
+        const elements = extractElementsFromCDPResponse(rawElements);
+        console.log('[DEBUG] Extracted elements count:', elements.length);
 
         if (elements.length === 0) {
-          const screenshot = await tab.page.screenshot(options);
+          console.log('[DEBUG] No elements found with locator, taking page screenshot');
+          const rawScreenshot = await tab.page.screenshot(options);
+          console.log('[DEBUG] Page screenshot raw type:', typeof rawScreenshot, 'Length:', rawScreenshot?.length || 'N/A');
+          console.log('[DEBUG] Page screenshot constructor:', rawScreenshot?.constructor?.name || 'N/A');
+          const screenshot = extractBufferFromCDPResponse(rawScreenshot);
+          console.log('[DEBUG] Page screenshot extracted type:', typeof screenshot, 'Length:', screenshot.length);
+          console.log('[DEBUG] Page screenshot is Buffer?', screenshot instanceof Buffer);
+          const base64Data = screenshot.toString('base64');
+          console.log('[DEBUG] Page screenshot base64 length:', base64Data.length, 'Preview:', base64Data.substring(0, 50) + '...');
           return {
             content: includeBase64 ? [{
               type: 'image' as 'image',
-              data: screenshot.toString('base64'),
+              data: base64Data,
               mimeType: fileType === 'png' ? 'image/png' : 'image/jpeg',
             }] : []
           };
         }
 
-        const screenshots = await Promise.all(
+        const rawScreenshots = await Promise.all(
             elements.map(element => element.screenshot(options))
         );
+        console.log('[DEBUG] Multiple screenshots count:', rawScreenshots.length);
+        const screenshots = rawScreenshots.map((rawScreenshot, index) => {
+          console.log(`[DEBUG] Screenshot ${index} raw type:`, typeof rawScreenshot, 'Length:', rawScreenshot?.length || 'N/A');
+          const extracted = extractBufferFromCDPResponse(rawScreenshot);
+          console.log(`[DEBUG] Screenshot ${index} extracted length:`, extracted.length);
+          return extracted;
+        });
 
         return {
-          content: includeBase64 ? screenshots.map(screenshot => ({
-            type: 'image' as 'image',
-            data: screenshot.toString('base64'),
-            mimeType: fileType === 'png' ? 'image/png' : 'image/jpeg',
-          })) : []
+          content: includeBase64 ? screenshots.map((screenshot, index) => {
+            const base64Data = screenshot.toString('base64');
+            console.log(`[DEBUG] Screenshot ${index} base64 length:`, base64Data.length);
+            return {
+              type: 'image' as 'image',
+              data: base64Data,
+              mimeType: fileType === 'png' ? 'image/png' : 'image/jpeg',
+            };
+          }) : []
         };
       } else {
-        const screenshot = locator ? await locator.screenshot(options) : await tab.page.screenshot(options);
+        console.log('[DEBUG] Taking direct screenshot (no locator)');
+        const rawScreenshot = locator ? await locator.screenshot(options) : await tab.page.screenshot(options);
+        console.log('[DEBUG] Direct screenshot raw type:', typeof rawScreenshot, 'Length:', rawScreenshot?.length || 'N/A');
+        console.log('[DEBUG] Direct screenshot constructor:', rawScreenshot?.constructor?.name || 'N/A');
+        const screenshot = extractBufferFromCDPResponse(rawScreenshot);
+        console.log('[DEBUG] Direct screenshot extracted type:', typeof screenshot, 'Length:', screenshot.length);
+        console.log('[DEBUG] Direct screenshot is Buffer?', screenshot instanceof Buffer);
+        const base64Data = screenshot.toString('base64');
+        console.log('[DEBUG] Direct screenshot base64 length:', base64Data.length, 'Preview:', base64Data.substring(0, 50) + '...');
+        console.log('[DEBUG] includeBase64 flag:', includeBase64);
         return {
           content: includeBase64 ? [{
             type: 'image' as 'image',
-            data: screenshot.toString('base64'),
+            data: base64Data,
             mimeType: fileType === 'png' ? 'image/png' : 'image/jpeg',
           }] : []
         };

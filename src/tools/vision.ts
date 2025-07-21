@@ -18,6 +18,7 @@ import { z } from 'zod';
 
 import { defineTool } from './tool.js';
 import * as javascript from '../javascript.js';
+import { extractElementsFromCDPResponse, extractBufferFromCDPResponse } from '../utils/cdp-content-extractor.js';
 
 const elementSchema = z.object({
   element: z.string().describe('Human-readable element description used to obtain permission to interact with the element'),
@@ -89,13 +90,15 @@ const screenshot = defineTool({
       ];
       action = async () => {
         const locator = tab.page.locator(params.locator!);
-        const elements = await locator.all();
+        const rawElements = await locator.all();
+        const elements = extractElementsFromCDPResponse(rawElements);
         if (elements.length === 0) {
           return {
             content: []
           };
         }
-        const screenshots = await Promise.all(elements.map(element => element.screenshot(options)));
+        const rawScreenshots = await Promise.all(elements.map(element => element.screenshot(options)));
+        const screenshots = rawScreenshots.map(extractBufferFromCDPResponse);
         return {
           content: screenshots.map(buffer => ({
             type: 'image',
@@ -110,7 +113,8 @@ const screenshot = defineTool({
         `await page.screenshot(${javascript.formatObject(options)});`
       ];
       action = async () => {
-        const buffer = await tab.page.screenshot(options);
+        const rawBuffer = await tab.page.screenshot(options);
+        const buffer = extractBufferFromCDPResponse(rawBuffer);
         return {
           content: [{ type: 'image', data: buffer.toString('base64'), mimeType: 'image/jpeg' }]
         };

@@ -1,9 +1,0 @@
-{
-    "zencoder.enableRepoIndexing": true,
-    "zencoder.mcpServers": {
-        "playwright-mcp-advanced": {
-            "url": "http://localhost:3000/sse",
-            "type": "sse"
-        }
-    }
-}

@@ -43,7 +43,7 @@ test('test snapshot tool list', async ({ client }) => {
     'browser_tab_list',
     'browser_tab_new',
     'browser_tab_select',
-    'browser_take_screenshot',
+    'browser_screen_capture',
     'browser_type',
     'browser_wait_for',
   ]));
@@ -99,6 +99,6 @@ test('test capabilities', async ({ startClient }) => {
   // But we should have all core tools available
   expect(toolNames).toContain('browser_navigate');
   expect(toolNames).toContain('browser_click');
-  expect(toolNames).toContain('browser_take_screenshot');
+  expect(toolNames).toContain('browser_screen_capture');
   expect(toolNames).toContain('browser_evaluate');
 });

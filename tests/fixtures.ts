@@ -86,6 +86,13 @@ export const test = baseTest.extend<TestFixtures & TestOptions, WorkerFixtures>(
       }
       if (options?.args)
         args.push(...options.args);
+      
+      // Auto-add vision capabilities for extension mode (both mcpMode and manual --extension)
+      const isExtensionMode = mcpMode === 'extension' || options?.args?.includes('--extension');
+      const hasExistingCaps = options?.args?.some(arg => arg.startsWith('--caps'));
+      if (isExtensionMode && !hasExistingCaps) {
+        args.push('--caps=vision');
+      }
       if (options?.config) {
         const configFile = testInfo.outputPath('config.json');
         await fs.promises.writeFile(configFile, JSON.stringify(options.config, null, 2));
@@ -144,7 +151,10 @@ export const test = baseTest.extend<TestFixtures & TestOptions, WorkerFixtures>(
   mcpMode: [undefined, { option: true }],
 
   _workerServers: [async ({ }, use, workerInfo) => {
-    const port = 8907 + workerInfo.workerIndex * 4;
+    // Generate browser-specific port offset to avoid conflicts between browser projects
+    const projectName = workerInfo.project.name;
+    const browserOffset = projectName === 'firefox' ? 1000 : projectName === 'webkit' ? 2000 : 0;
+    const port = 8907 + browserOffset + workerInfo.workerIndex * 4;
     const server = await TestServer.create(port);
 
     const httpsPort = port + 1;

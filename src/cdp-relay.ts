@@ -63,6 +63,8 @@ export class CDPRelay {
     resolve: (value: any) => void;
     reject: (error: Error) => void;
     sessionId?: string;
+    originalMethod?: string;
+    originalParams?: any;
   }> = new Map();
   private nextMessageId = 1;
 
@@ -120,7 +122,56 @@ export class CDPRelay {
       ws.on('message', (data: Buffer) => {
         try {
           const message = JSON.parse(data.toString());
-          logger.log('📨 Message from extension:', JSON.stringify(message, null, 2));
+          
+          // Добавляем дополнительные поля для логирования
+          let additionalInfo: Record<string, any> = {};
+          
+          if ('id' in message) {
+            // Это ответ на команду
+            const pendingInfo = this.pendingMessages.get(message.id);
+            additionalInfo = {
+              _responseToCommandId: message.id,
+              _responseType: message.error ? 'error' : 'success',
+              _originalCommand: 'unknown'
+            };
+            
+            // Если есть информация о запросе в pendingMessages, добавляем её
+            if (pendingInfo) {
+              additionalInfo._originalCommand = pendingInfo.originalMethod || 'unknown';
+              additionalInfo._originalParams = pendingInfo.originalParams || {};
+            }
+            
+            logger.log('📨 Message from extension:', JSON.stringify({
+              ...message,
+              ...additionalInfo
+            }, null, 2));
+          } else if ('method' in message) {
+            // Это событие от расширения
+            additionalInfo = {
+              _messageType: 'event',
+              _method: message.method
+            } as Record<string, any>;
+            
+            logger.log('📨 Message from extension:', JSON.stringify({
+              ...message,
+              ...additionalInfo
+            }, null, 2));
+          } else if ('type' in message && message.type === 'connection_info') {
+            // Это информация о соединении
+            additionalInfo = {
+              _messageType: 'connectionInfo',
+              _sessionId: message.sessionId
+            } as Record<string, any>;
+            
+            logger.log('📨 Message from extension:', JSON.stringify({
+              ...message,
+              ...additionalInfo
+            }, null, 2));
+          } else {
+            // Другой тип сообщения
+            logger.log('📨 Message from extension:', JSON.stringify(message, null, 2));
+          }
+          
           this.handleExtensionMessage(message);
         } catch (error) {
           debugLog('Error parsing message from extension:', error);
@@ -205,10 +256,24 @@ export class CDPRelay {
       } else {
         pending.resolve(cdpMessage.result);
       }
+      
+      // Check if this is a navigation response and update targetInfo
+      if (cdpMessage.id && pending.sessionId && this.activeConnection && 
+          cdpMessage.result && cdpMessage.result.frameId) {
+        // This might be a navigation response, let's update the URL and title
+        this.updateTargetInfoAfterNavigation().catch(e => 
+          debugLog('Error updating target info after navigation:', e));
+      }
     } else if (cdpMessage.method) {
       // Forward CDP event to Playwright
       debugLog('Received CDP event:', cdpMessage.method);
       this._sendToPlaywright(cdpMessage);
+      
+      // If this is a navigation event, update the target info
+      if (cdpMessage.method === 'Page.frameNavigated' && this.activeConnection) {
+        this.updateTargetInfoAfterNavigation().catch(e => 
+          debugLog('Error updating target info after navigation event:', e));
+      }
     }
   }
 
@@ -217,7 +282,26 @@ export class CDPRelay {
    */
   private _handlePlaywrightMessage(message: any): void {
     debugLog('← Playwright:', message.method || `response(${message.id})`);
-    logger.log('🎭 Command from Playwright:', JSON.stringify(message, null, 2));
+    
+    // Log commands from agents with special emoji markers
+    if (message.method) {
+      logger.log('💬💬💬 Agent Command:', JSON.stringify(message, null, 2));
+      
+      // Additional logging for specific command types
+      if (message.method.startsWith('Page.')) {
+        logger.log('📄 Page Action:', message.method);
+      } else if (message.method.startsWith('Input.')) {
+        logger.log('⌨️ Input Action:', message.method);
+      } else if (message.method.startsWith('Mouse.')) {
+        logger.log('🖱️ Mouse Action:', message.method);
+      } else if (message.method.startsWith('Network.')) {
+        logger.log('🌐 Network Action:', message.method);
+      } else if (message.method.startsWith('DOM.')) {
+        logger.log('🔍 DOM Action:', message.method);
+      }
+    } else {
+      logger.log('🎭 Response from Playwright:', JSON.stringify(message, null, 2));
+    }
 
     // Handle Browser domain methods locally
     if (message.method?.startsWith('Browser.')) {
@@ -323,9 +407,40 @@ export class CDPRelay {
   private _forwardToExtension(message: any): void {
     if (this.activeConnection?.socket?.readyState === WebSocket.OPEN) {
       debugLog('→ Extension:', message.method || `command(${message.id})`);
+      
+      // Log detailed command information with emoji
+      if (message.method) {
+        logger.log(`💬💬💬 Forwarding Agent Command to Extension: ${message.method}`);
+        
+        // Log command parameters if they exist
+        if (message.params) {
+          const paramsStr = JSON.stringify(message.params, null, 2);
+          logger.log(`📝 Command Parameters: ${paramsStr}`);
+        }
+        
+        // Если есть ID, сохраняем информацию о команде в pendingMessages
+        if (message.id) {
+          // Проверяем, есть ли уже запись для этого ID
+          if (!this.pendingMessages.has(message.id)) {
+            this.pendingMessages.set(message.id, {
+              resolve: () => {},
+              reject: () => {},
+              originalMethod: message.method,
+              originalParams: message.params
+            });
+          } else {
+            // Если запись уже есть, обновляем информацию о методе и параметрах
+            const pending = this.pendingMessages.get(message.id)!;
+            pending.originalMethod = message.method;
+            pending.originalParams = message.params;
+          }
+        }
+      }
+      
       this.activeConnection.socket.send(JSON.stringify(message));
     } else {
       debugLog('Extension not connected, cannot forward message');
+      logger.warn('⚠️ Extension not connected, cannot forward command');
       if (message.id) {
         this._sendToPlaywright({
           id: message.id,
@@ -341,6 +456,25 @@ export class CDPRelay {
   private _sendToPlaywright(message: any): void {
     if (this.playwrightSocket?.readyState === WebSocket.OPEN) {
       debugLog('→ Playwright:', JSON.stringify(message));
+      
+      // Log responses to agent commands with emoji
+      if (message.id && message.result) {
+        logger.log(`💬💬💬 Response to Agent Command (ID: ${message.id}):`);
+        logger.log(`✅ Result: ${JSON.stringify(message.result, null, 2)}`);
+      } 
+      // Log events sent to Playwright
+      else if (message.method) {
+        logger.log(`💬💬💬 Event to Playwright: ${message.method}`);
+        if (message.params) {
+          logger.log(`📊 Event Parameters: ${JSON.stringify(message.params, null, 2)}`);
+        }
+      }
+      // Log errors
+      else if (message.error) {
+        logger.log(`💬💬💬 Error Response to Agent Command:`);
+        logger.error(`❌ Error: ${JSON.stringify(message.error, null, 2)}`);
+      }
+      
       this.playwrightSocket.send(JSON.stringify(message));
     }
   }
@@ -362,7 +496,14 @@ export class CDPRelay {
     };
 
     return new Promise((resolve, reject) => {
-      this.pendingMessages.set(id, { resolve, reject, sessionId });
+      // Сохраняем информацию о методе и параметрах команды
+      this.pendingMessages.set(id, { 
+        resolve, 
+        reject, 
+        sessionId,
+        originalMethod: method,
+        originalParams: params
+      });
       
       this.activeConnection!.socket.send(JSON.stringify(message));
       
@@ -397,6 +538,50 @@ export class CDPRelay {
    */
   getSessionId(): string | undefined {
     return this.activeConnection?.sessionId;
+  }
+  
+  /**
+   * Update target info after navigation
+   * This method fetches the current URL and title from the page
+   * and updates the targetInfo object to keep it in sync with the actual page state
+   */
+  async updateTargetInfoAfterNavigation(): Promise<void> {
+    if (!this.activeConnection || !this.activeConnection.sessionId) {
+      return;
+    }
+    
+    try {
+      // Get current URL
+      const urlResult = await this.sendCommand('Runtime.evaluate', { 
+        expression: 'window.location.href' 
+      });
+      
+      // Get current title
+      const titleResult = await this.sendCommand('Runtime.evaluate', { 
+        expression: 'document.title' 
+      });
+      
+      if (urlResult?.value && this.activeConnection.targetInfo) {
+        const oldUrl = this.activeConnection.targetInfo.url;
+        const newUrl = urlResult.value;
+        const newTitle = titleResult?.value || this.activeConnection.targetInfo.title;
+        
+        // Only log if URL actually changed
+        if (oldUrl !== newUrl) {
+          debugLog(`Updating targetInfo after navigation: ${oldUrl} -> ${newUrl}`);
+          logger.log(`🔄 Page navigated: ${oldUrl} -> ${newUrl}`);
+          
+          // Update the targetInfo with new URL and title
+          this.activeConnection.targetInfo = {
+            ...this.activeConnection.targetInfo,
+            url: newUrl,
+            title: newTitle
+          };
+        }
+      }
+    } catch (error) {
+      debugLog('Error updating target info after navigation:', error);
+    }
   }
 
   /**

@@ -28,11 +28,22 @@ export class Tab {
   private _requests: Map<playwright.Request, playwright.Response | null> = new Map();
   private _snapshot: PageSnapshot | undefined;
   private _onPageClose: (tab: Tab) => void;
+  private _cdpRelay: any; // Store CDP relay if available
 
   constructor(context: Context, page: playwright.Page, onPageClose: (tab: Tab) => void) {
     this.context = context;
     this.page = page;
     this._onPageClose = onPageClose;
+    
+    // Try to get CDP relay from page if it exists
+    if ((page as any)._browser && (page as any)._browser._cdpRelay) {
+      this._cdpRelay = (page as any)._browser._cdpRelay;
+      console.log('[Tab] 🔌 Found CDP relay in page');
+    } else if ((page as any)._cdpRelay) {
+      this._cdpRelay = (page as any)._cdpRelay;
+      console.log('[Tab] 🔌 Found CDP relay directly in page');
+    }
+    
     page.on('console', event => this._consoleMessages.push(messageToConsoleMessage(event)));
     page.on('pageerror', error => this._consoleMessages.push(pageErrorToConsoleMessage(error)));
     page.on('request', request => this._requests.set(request, null));
@@ -64,7 +75,52 @@ export class Tab {
   }
 
   async title(): Promise<string> {
-    return await callOnPageNoTrace(this.page, page => page.title());
+    // console.log('[Tab] 📄 Getting page title...');
+    
+    // If we have CDP relay, try to get title from target info first
+    if (this._cdpRelay && this._cdpRelay.getTargetInfo) {
+      const targetInfo = this._cdpRelay.getTargetInfo();
+      if (targetInfo?.title) {
+        console.log('[Tab] 📄 Using title from CDP relay target info:', targetInfo.title);
+        return targetInfo.title;
+      }
+    }
+    
+    // Fallback to standard Playwright method
+    try {
+      const title = await callOnPageNoTrace(this.page, page => page.title());
+      console.log('[Tab] 📄 Using title from Playwright:', title);
+      return title;
+    } catch (error) {
+      console.error('[Tab] ❌ Error getting title from Playwright:', error);
+      return 'Unknown';
+    }
+  }
+  
+  /**
+   * Get the current URL of the page, with CDP relay fallback
+   */
+  getUrl(): string {
+    // console.log('[Tab] 🌐 Getting page URL...');
+    
+    // If we have CDP relay, try to get URL from target info first
+    if (this._cdpRelay && this._cdpRelay.getTargetInfo) {
+      const targetInfo = this._cdpRelay.getTargetInfo();
+      if (targetInfo?.url) {
+        // console.log('[Tab] 🌐 Using URL from CDP relay target info:', targetInfo.url);
+        return targetInfo.url;
+      }
+    }
+    
+    // Fallback to standard Playwright method
+    try {
+      const url = this.page.url();
+      console.log('[Tab] 🌐 Using URL from Playwright:', url);
+      return url;
+    } catch (error) {
+      console.error('[Tab] ❌ Error getting URL from Playwright:', error);
+      return 'about:blank';
+    }
   }
 
   async waitForLoadState(state: 'load', options?: { timeout?: number }): Promise<void> {
@@ -95,6 +151,16 @@ export class Tab {
 
     // Cap load event to 5 seconds, the page is operational at this point.
     await this.waitForLoadState('load', { timeout: 5000 });
+    
+    // Update target info in CDP relay if available
+    if (this._cdpRelay && typeof this._cdpRelay.updateTargetInfoAfterNavigation === 'function') {
+      // console.log('[Tab] 🔄 Updating target info after navigation');
+      try {
+        await this._cdpRelay.updateTargetInfoAfterNavigation();
+      } catch (error) {
+        console.error('[Tab] ❌ Error updating target info:', error);
+      }
+    }
   }
 
   hasSnapshot(): boolean {
@@ -116,7 +182,8 @@ export class Tab {
   }
 
   async captureSnapshot() {
-    this._snapshot = await PageSnapshot.create(this.page);
+    // console.log('[Tab] 📸 Capturing snapshot...');
+    this._snapshot = await PageSnapshot.create(this.page, this._cdpRelay);
   }
 }
 

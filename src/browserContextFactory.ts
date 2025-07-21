@@ -292,7 +292,9 @@ class CdpRelayContextFactory extends BaseContextFactory {
             });
           }
         }
-      }
+      },
+      // Add debugging info
+      _cdpRelay: this.cdpRelay
     };
 
     const mockContext = {
@@ -303,7 +305,14 @@ class CdpRelayContextFactory extends BaseContextFactory {
     };
 
     const mockPage = {
-      url: () => 'about:blank',
+      // Add direct access to CDP relay for Tab to use
+      _cdpRelay: this.cdpRelay,
+      
+      url: () => {
+        // Get URL from target info if available
+        const targetInfo = this.cdpRelay.getTargetInfo();
+        return targetInfo?.url || 'about:blank';
+      },
       goto: (url: string) => this.cdpRelay.sendCommand('Page.navigate', { url }),
       click: (selector: string) => this.cdpRelay.sendCommand('Runtime.evaluate', { 
         expression: `document.querySelector('${selector}').click()` 
@@ -341,24 +350,75 @@ class CdpRelayContextFactory extends BaseContextFactory {
       _snapshotForAI: async (options?: any) => {
         // Mock implementation for _snapshotForAI
         try {
-          const html = await this.cdpRelay.sendCommand('Runtime.evaluate', { 
+          // Get target info first for URL and title
+          const targetInfo = this.cdpRelay.getTargetInfo();
+          // console.log('[CDP-RELAY-FACTORY] 📸 Snapshot target info:', JSON.stringify(targetInfo, null, 2));
+          
+          // Get HTML content
+          const htmlResult = await this.cdpRelay.sendCommand('Runtime.evaluate', { 
             expression: 'document.documentElement.outerHTML' 
           });
+          
+          // Get document title directly
+          const titleResult = await this.cdpRelay.sendCommand('Runtime.evaluate', { 
+            expression: 'document.title' 
+          });
+          
+          // Get viewport size
+          const viewportResult = await this.cdpRelay.sendCommand('Runtime.evaluate', { 
+            expression: 'JSON.stringify({width: window.innerWidth, height: window.innerHeight})' 
+          });
+          
+          let viewport = { width: 1280, height: 720 };
+          try {
+            if (viewportResult?.result?.value) {
+              viewport = JSON.parse(viewportResult.result.value);
+            }
+          } catch (e) {
+            console.error('[CDP-RELAY-FACTORY] ❌ Error parsing viewport:', e);
+          }
+          
+          // Use target info for URL and title if available, otherwise use evaluated values
+          const url = targetInfo?.url || 'about:blank';
+          const title = targetInfo?.title || titleResult?.result?.value || 'Unknown';
+          const html = htmlResult?.result?.value || '<html><body>Mock snapshot</body></html>';
+          
+          // console.log('[CDP-RELAY-FACTORY] 📸 Snapshot data:', { 
+          //   url, 
+          //   title, 
+          //   viewportWidth: viewport.width, 
+          //   viewportHeight: viewport.height,
+          //   htmlLength: html.length
+          // });
+          
           return {
-            html: html?.result?.value || '<html><body>Mock snapshot</body></html>',
-            viewport: { width: 1280, height: 720 },
-            url: 'about:blank'
+            html,
+            viewport,
+            url,
+            title
           };
         } catch (error) {
+          console.error('[CDP-RELAY-FACTORY] ❌ Error in _snapshotForAI:', error);
           return {
             html: '<html><body>Mock snapshot - error</body></html>',
             viewport: { width: 1280, height: 720 },
-            url: 'about:blank'
+            url: 'about:blank',
+            title: 'Error'
           };
         }
       },
       content: () => this.cdpRelay.sendCommand('Runtime.evaluate', { expression: 'document.documentElement.outerHTML' }),
-      title: () => this.cdpRelay.sendCommand('Runtime.evaluate', { expression: 'document.title' }),
+      title: async () => {
+        // Try to get title from target info first
+        const targetInfo = this.cdpRelay.getTargetInfo();
+        if (targetInfo?.title) {
+          return targetInfo.title;
+        }
+        
+        // Fallback to evaluating document.title
+        const result = await this.cdpRelay.sendCommand('Runtime.evaluate', { expression: 'document.title' });
+        return result?.result?.value || 'Unknown';
+      },
       reload: (options?: any) => this.cdpRelay.sendCommand('Page.reload', options || {}),
       goBack: (options?: any) => this.cdpRelay.sendCommand('Page.goBack', options || {}),
       goForward: (options?: any) => this.cdpRelay.sendCommand('Page.goForward', options || {}),

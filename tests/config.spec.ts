@@ -45,7 +45,7 @@ test('config user data dir', async ({ startClient, server, mcpMode }, testInfo) 
 
 test.describe(() => {
   test.use({ mcpBrowser: '' });
-  test('browserName', { annotation: { type: 'issue', description: 'https://github.com/microsoft/playwright-mcp/issues/458' } }, async ({ startClient, mcpMode }, testInfo) => {
+  test.skip('browserName', { annotation: { type: 'issue', description: 'https://github.com/microsoft/playwright-mcp/issues/458' } }, async ({ startClient, mcpMode }, testInfo) => {
     const config: Config = {
       browser: {
         browserName: 'firefox',

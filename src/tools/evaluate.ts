@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { defineTool } from './tool.js';
 import * as javascript from '../javascript.js';
 import { generateLocator } from './utils.js';
+import { extractContentFromCDPResponse } from '../utils/cdp-content-extractor.js';
 
 import type * as playwright from 'playwright';
 
@@ -59,9 +60,11 @@ const evaluate = defineTool({
         let result: any;
         
         if (locator) {
-          result = await locator.evaluate(evaluateFunction);
+          const rawResult = await locator.evaluate(evaluateFunction);
+          result = extractContentFromCDPResponse(rawResult);
         } else {
-          result = await tab.page.evaluate(evaluateFunction);
+          const rawResult = await tab.page.evaluate(evaluateFunction);
+          result = extractContentFromCDPResponse(rawResult);
         }
         
         return {

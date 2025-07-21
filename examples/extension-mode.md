@@ -17,6 +17,20 @@ npm run build
 
 ## Step 2: Start the MCP server in extension mode
 
+You can start the MCP server in extension mode using the provided npm script:
+
+```bash
+npm run extension
+```
+
+This will start the server with the following configuration:
+- Extension mode enabled (`--extension`)
+- Port 3000 (`--port 3000`)
+- Using Chromium browser (`--browser chromium`)
+- Vision mode enabled (`--vision`)
+
+Alternatively, you can start it with custom parameters:
+
 ```bash
 node cli.js --extension --port 9224
 ```
@@ -59,6 +73,18 @@ Now you can use MCP tools to control the connected Chrome tab. For example:
    }
    ```
 
+   If you're using the default configuration with `npm run extension`, use:
+   ```json
+   {
+     "mcpServers": {
+       "playwright-extension": {
+         "url": "http://localhost:3000/sse",
+         "type": "sse"
+       }
+     }
+   }
+   ```
+
 2. Use MCP tools like:
    - `browser_navigate` - Navigate to a different URL
    - `browser_click` - Click on elements
@@ -79,7 +105,26 @@ User: Click on the "Sign in" button
 Assistant: [Uses browser_click tool]
 ```
 
-## Benefits of Extension Mode
+## Comparison with Standard Mode
+
+### Standard Mode Configuration
+
+For comparison, here's how you would configure an MCP client to use the standard mode (stdio):
+
+```json
+{
+    "command": "node",
+    "args": [
+        "/path/to/playwright-mcp-advanced/cli.js",
+        "--browser",
+        "chrome",
+        "--vision",
+        "--isolated"
+    ]
+}
+```
+
+### Benefits of Extension Mode
 
 1. **No new browser instances**: Work with your existing Chrome tabs
 2. **Authenticated sessions**: Use tabs that are already logged in

@@ -18,6 +18,7 @@ import debug from 'debug';
 import * as playwright from 'playwright';
 
 import { callOnPageNoTrace, waitForCompletion } from './tools/utils.js';
+import { extractStringFromCDPResponse } from './utils/cdp-content-extractor.js';
 import { ManualPromise } from './manualPromise.js';
 import { Tab } from './tab.js';
 import { outputFile } from './config.js';
@@ -52,9 +53,8 @@ export class Context {
   }
 
   clientSupportsImages(): boolean {
-    if (this.config.imageResponses === 'omit')
-      return false;
-    return true;
+    // Default to allowing images unless explicitly set to 'omit'
+    return this.config.imageResponses !== 'omit';
   }
 
   modalStates(): ModalState[] {
@@ -195,10 +195,36 @@ ${code.join('\n')}
       if (this.tabs().length > 1)
         result.push('### Current tab');
 
+      console.log('[Context] 🔍 Getting page info for result...');
+      
+      // Get URL using the new method in Tab
+      const pageUrl = tab.getUrl();
+      console.log('[Context] 🌐 Page URL from tab.getUrl():', pageUrl);
+      
+      // Get title using the existing method in Tab (which now has CDP relay fallback)
+      const pageTitle = await tab.title();
+      // console.log('[Context] 📄 Page title from tab.title():', pageTitle);
+      
       result.push(
-          `- Page URL: ${tab.page.url()}`,
-          `- Page Title: ${await tab.title()}`
+          `- Page URL: ${pageUrl}`,
+          `- Page Title: ${pageTitle}`
       );
+      
+      // Get page content for tests that need it
+      try {
+        const rawPageContent = await tab.page.content();
+        const pageContent = extractStringFromCDPResponse(rawPageContent);
+        const bodyMatch = pageContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+        if (bodyMatch && bodyMatch[1]) {
+          const bodyContent = bodyMatch[1].trim();
+          if (bodyContent) {
+            result.push(`- Page Content: ${bodyContent.substring(0, 200)}${bodyContent.length > 200 ? '...' : ''}`);
+          }
+        }
+      } catch (e) {
+        console.error('[Context] ❌ Error getting page content:', e);
+      }
+      
       result.push(tab.snapshotOrDie().text());
     }
 
@@ -346,3 +372,5 @@ ${code.join('\n')}
     return result;
   }
 }
+
+
