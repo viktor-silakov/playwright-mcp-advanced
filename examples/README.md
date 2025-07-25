@@ -1,44 +1,89 @@
 # Examples
 
-This directory contains various examples and documentation for using playwright-mcp-advanced.
+This directory contains examples demonstrating various features of the advanced Playwright MCP server.
 
-## Contents
+## Programmatic Server Creation Examples
 
-- **[plugins/](./plugins/)** - Example plugin implementations
-- **[ai-agents-extension-setup.md](./ai-agents-extension-setup.md)** - Setup guide for AI agents with extension
-- **[electron-example.md](./electron-example.md)** - How to use with Electron applications
-- **[extension-mode.md](./extension-mode.md)** - Extension mode documentation
-- **[generate-test.md](./generate-test.md)** - Test generation examples
+### 🚀 Quick Start
 
-## Plugin Examples
+**[simple-custom-server.ts](simple-custom-server.ts)** - A minimal example showing how to create a custom MCP server with additional tools and resources.
 
-The `plugins/` directory contains **three comprehensive plugin examples**:
-- **test-plugin** - Simple plugin with basic tool definition
-- **example-plugin** - Full-featured plugin with tools, prompts, resources, and properties
-- **shadow-demo** - Enhanced navigation plugin with logging
+**Run it:**
+```bash
+# STDIO mode
+tsx examples/simple-custom-server.ts
 
-These examples demonstrate:
-- Custom tool creation using `defineTool`
-- Plugin structure and metadata
-- Advanced features like shadowing and lifecycle methods
-- Both JavaScript (.js) and TypeScript (.ts) implementations
+# HTTP mode  
+PORT=3000 tsx examples/simple-custom-server.ts
+```
 
-## Quick Start
+### 📚 Comprehensive Example
 
-To see plugin examples in action:
+**[programmatic-server-example.ts](programmatic-server-example.ts)** - A full-featured example with multiple custom tools, resources, and prompts.
 
-1. Build the project:
-   ```bash
-   npm run build
-   ```
+**Features demonstrated:**
+- Calculator tool with validation
+- Text processing tool
+- System information resource
+- Server configuration resource
+- Code review prompt
+- Debug help prompt
 
-2. Start the server with the example plugins:
-   ```bash
-   node dist/cli.js --plugins-folder examples/plugins
-   ```
+### 🔧 Available Custom Components
 
-3. The test plugin will be available as `custom_folder_test` tool.
+The examples show how to create:
 
-## Development
+**Custom Tools:**
+- `simple-calc` - Basic calculator (add, subtract, multiply, divide)
+- `text-process` - Text manipulation (uppercase, lowercase, reverse, word count)
+- `calculate` - Advanced expression evaluator
 
-For active plugin development, use the main `plugins/` directory in the project root rather than these examples.
+**Custom Resources:**
+- `server://info` - Live server information
+- `config://server` - Server configuration and capabilities
+- `system://info` - System and Node.js information
+
+**Custom Prompts:**
+- `code-review` - Generate code review prompts
+- `debug-help` - Generate debugging assistance prompts
+
+### 🎯 Integration Notes
+
+All custom components work seamlessly with standard Playwright tools:
+- Browser automation (navigate, click, type, etc.)
+- Screenshot tools with advanced options
+- HTML extraction tools
+- Element snapshot tools
+- Vision capabilities (when enabled)
+- PDF tools (when enabled)
+
+### 📖 Documentation
+
+- **[Programmatic API Documentation](../docs/programmatic-api.md)** - Complete API reference
+- **[Programmatic Server Guide](programmatic-server.md)** - Detailed usage examples
+
+### 🧪 Testing
+
+The examples include comprehensive test coverage:
+- **[programmatic-server.spec.ts](../tests/programmatic-server.spec.ts)** - Unit tests for the builder API
+- **[enhanced-connection-simple.spec.ts](../tests/enhanced-connection-simple.spec.ts)** - Integration tests
+
+### ⚡ Quick Commands
+
+```bash
+# Build the project
+npm run build
+
+# Run all tests
+npm test
+
+# Run specific tests
+npx playwright test tests/programmatic-server.spec.ts
+npx playwright test tests/enhanced-connection-simple.spec.ts
+
+# Run example server
+tsx examples/simple-custom-server.ts
+
+# Run advanced example
+tsx examples/programmatic-server-example.ts
+```

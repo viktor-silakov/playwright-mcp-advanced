@@ -134,7 +134,7 @@ test('extension mode - compatible with existing tools', async ({ startClient }) 
 
   test('extension mode validation - only supports chromium', async () => {
     const result = spawnSync('node', [
-      path.join(__filename, '../../cli.js'), '--extension', '--browser=firefox', '--port=9230'
+      path.join(__filename, '../../dist/cli.js'), '--extension', '--browser=firefox', '--port=9230'
     ]);
     expect(result.error).toBeUndefined();
     expect(result.status).toBe(1);
@@ -143,7 +143,7 @@ test('extension mode - compatible with existing tools', async ({ startClient }) 
 
   test('extension mode validation - does not support device emulation', async () => {
     const result = spawnSync('node', [
-      path.join(__filename, '../../cli.js'), '--extension', '--device=Pixel 5', '--port=9231'
+      path.join(__filename, '../../dist/cli.js'), '--extension', '--device=Pixel 5', '--port=9231'
     ]);
     expect(result.error).toBeUndefined();
     expect(result.status).toBe(1);
@@ -152,7 +152,7 @@ test('extension mode - compatible with existing tools', async ({ startClient }) 
 
   test('extension mode validation - requires port for HTTP server', async () => {
     const result = spawnSync('node', [
-      path.join(__filename, '../../cli.js'), '--extension'
+      path.join(__filename, '../../dist/cli.js'), '--extension'
     ]);
     expect(result.error).toBeUndefined();
     expect(result.status).not.toBe(0); // Process should exit with non-zero code

@@ -49,7 +49,7 @@ test.describe('Extension Mode E2E Tests', () => {
     // Запускаем MCP сервер в extension режиме
     console.log('Starting MCP server in extension mode...');
     const serverProcess = spawn('node', [
-      'cli.js',
+      'dist/cli.js',
       '--extension',
       '--port', port.toString(),
       '--browser', 'chromium'
@@ -269,7 +269,7 @@ test.describe('Extension Mode E2E Tests', () => {
     // Запускаем сервер без расширения сначала
     console.log('Starting MCP server without extension...');
     const serverProcess = spawn('node', [
-      'cli.js',
+      'dist/cli.js',
       '--extension',
       '--port', port.toString(),
       '--browser', 'chromium'

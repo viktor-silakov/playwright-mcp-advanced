@@ -8,7 +8,7 @@ test.describe('Extension Mode Demo', () => {
     
     console.log('🚀 Starting MCP server in extension mode...');
     const serverProcess = spawn('node', [
-      'cli.js',
+      'dist/cli.js',
       '--extension',
       '--port', port.toString(),
       '--browser', 'chromium'
@@ -95,7 +95,7 @@ test.describe('Extension Mode Demo', () => {
     // Тест 1: Расширение требует Chromium браузер
     console.log('Test 1: Extension mode requires Chromium browser');
     const firefoxTest = spawn('node', [
-      'cli.js',
+      'dist/cli.js',
       '--extension',
       '--browser', 'firefox',
       '--port', '19800'
@@ -120,7 +120,7 @@ test.describe('Extension Mode Demo', () => {
     // Тест 2: Расширение не поддерживает эмуляцию устройств
     console.log('Test 2: Extension mode rejects device emulation');
     const deviceTest = spawn('node', [
-      'cli.js',
+      'dist/cli.js',
       '--extension',
       '--device', 'iPhone 13',
       '--port', '19801'
@@ -145,7 +145,7 @@ test.describe('Extension Mode Demo', () => {
     // Тест 3: Расширение требует HTTP порт
     console.log('Test 3: Extension mode requires HTTP server port');
     const noPortTest = spawn('node', [
-      'cli.js',
+      'dist/cli.js',
       '--extension'
     ], {
       stdio: ['pipe', 'pipe', 'pipe'],

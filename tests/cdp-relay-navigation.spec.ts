@@ -253,7 +253,7 @@ test.describe('CDP Relay Navigation Tests', () => {
         
         console.log('🚀 Starting MCP server in extension mode...');
         serverProcess = spawn('node', [
-            'cli.js',
+            'dist/cli.js',
             '--extension',
             '--port', port.toString(),
             '--browser', 'chromium'

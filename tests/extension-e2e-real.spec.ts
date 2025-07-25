@@ -43,7 +43,7 @@ test.describe('Extension Mode Real Browser Control E2E', () => {
 
         console.log('🚀 Starting MCP server in extension mode...');
         const serverProcess = spawn('node', [
-            'cli.js',
+            'dist/cli.js',
             '--extension',
             '--port', port.toString(),
             '--browser', 'chromium'
@@ -310,7 +310,7 @@ test.describe('Extension Mode Real Browser Control E2E', () => {
 
         console.log('🚀 Starting server for reconnection test...');
         const serverProcess = spawn('node', [
-            'cli.js',
+            'dist/cli.js',
             '--extension',
             '--port', port.toString(),
             '--browser', 'chromium'

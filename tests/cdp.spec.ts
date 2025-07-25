@@ -112,7 +112,7 @@ const __filename = url.fileURLToPath(import.meta.url);
 
 test('does not support --device', async () => {
   const result = spawnSync('node', [
-    path.join(__filename, '../../cli.js'), '--device=Pixel 5', '--cdp-endpoint=http://localhost:1234',
+    path.join(__filename, '../../dist/cli.js'), '--device=Pixel 5', '--cdp-endpoint=http://localhost:1234',
   ]);
   expect(result.error).toBeUndefined();
   expect(result.status).toBe(1);

@@ -62,6 +62,34 @@ This advanced version includes additional capabilities not available in the orig
 - **Live App Testing** - Test and interact with production Electron applications
 - **No Browser Launch** - Connects to your running Electron app instead of launching new browsers
 
+#### 🔧 Programmatic Server Creation
+
+- **Custom Tools** - Add your own tools with custom logic and validation
+- **Custom Resources** - Provide custom data resources accessible via MCP protocol
+- **Custom Prompts** - Create reusable prompt templates with arguments
+- **Builder Pattern** - Fluent API for server configuration and customization
+- **Type Safety** - Full TypeScript support with Zod schema validation
+- **Integration** - Seamlessly combine custom components with standard Playwright tools
+
+📚 **[Complete Programmatic API Documentation →](docs/programmatic-api.md)**
+
+**Quick Example:**
+```typescript
+import { createServerBuilder, createTool } from 'playwright-mcp-advanced';
+import { z } from 'zod';
+
+const calculator = createTool(
+  'calculate',
+  'Perform calculations',
+  z.object({ expression: z.string() }),
+  async (params) => ({ content: [{ type: 'text', text: `Result: ${eval(params.expression)}` }] })
+);
+
+const server = await createServerBuilder()
+  .addTool(calculator)
+  .build();
+```
+
 ### Requirements
 
 - Node.js 18 or newer

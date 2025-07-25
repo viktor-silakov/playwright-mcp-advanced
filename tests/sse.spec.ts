@@ -38,7 +38,7 @@ const test = baseTest.extend<{ serverEndpoint: (options?: { args?: string[], noP
         throw new Error('Process already running');
 
       cp = spawn('node', [
-        path.join(path.dirname(__filename), '../cli.js'),
+        path.join(path.dirname(__filename), '../dist/cli.js'),
         ...(options?.noPort ? [] : ['--port=0']),
         '--user-data-dir=' + userDataDir,
         ...(mcpHeadless ? ['--headless'] : []),
