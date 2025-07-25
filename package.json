@@ -38,7 +38,7 @@
     "dev": "mcp-server-playwright",
     "dev-watch": "tsx watch src/program.ts",
     "clean": "rm -rf dist",
-    "release": "npm run clean && npm run update-readme && npm run build && npm run test && release-it  --increment"
+    "release": "npm run clean && npm run build && npm run update-readme && npm run test && release-it  --increment"
   },
   "exports": {
     "./package.json": "./package.json",

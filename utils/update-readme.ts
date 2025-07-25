@@ -34,7 +34,6 @@ import pdfTools from '../src/tools/pdf.js';
 import snapshotTools from '../src/tools/snapshot.js';
 import tabsTools from '../src/tools/tabs.js';
 import screenshotTools from '../src/tools/screenshot.js';
-import testTools from '../src/tools/testing.js';
 import visionTools from '../src/tools/vision.js';
 import waitTools from '../src/tools/wait.js';
 
@@ -64,9 +63,6 @@ const categories = {
   ],
   'Tabs': [
     ...tabsTools,
-  ],
-  'Testing': [
-    ...testTools,
   ],
   'Vision mode': [
     ...visionTools,
@@ -159,7 +155,7 @@ async function updateTools(content: string): Promise<string> {
 }
 
 async function updateOptions(content: string): Promise<string> {
-  const output = execSync('node cli.js --help');
+  const output = execSync('node dist/cli.js --help');
   const lines = output.toString().split('\n');
   const firstLine = lines.findIndex(line => line.includes('--version'));
   lines.splice(0, firstLine + 1);
