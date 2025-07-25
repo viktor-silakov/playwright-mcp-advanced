@@ -289,18 +289,16 @@ Playwright MCP server supports following arguments. They can be provided in the 
   --block-service-workers      block service workers
   --browser <browser>          browser or chrome channel to use, possible
                                values: chrome, firefox, webkit, msedge.
-  --browser-agent <endpoint>   Use browser agent (experimental).
-  --caps <caps>                comma-separated list of capabilities to enable,
-                               possible values: tabs, pdf, history, wait, files,
-                               install. Default is all.
+  --caps <caps>                comma-separated list of additional capabilities
+                               to enable, possible values: vision, pdf.
   --cdp-endpoint <endpoint>    CDP endpoint to connect to.
   --config <path>              path to the configuration file.
   --device <device>            device to emulate, for example: "iPhone 15"
   --electron                   enable Electron application support, requires
                                --cdp-endpoint
-  --executable-path <path>     path to the browser executable.
   --extension                  run in extension mode, starts CDP relay server
                                for Chrome extension
+  --executable-path <path>     path to the browser executable.
   --headless                   run browser in headless mode, headed by default
   --host <host>                host to bind server to. Default is localhost. Use
                                0.0.0.0 to bind to all interfaces.
@@ -308,12 +306,12 @@ Playwright MCP server supports following arguments. They can be provided in the 
   --isolated                   keep the browser profile in memory, do not save
                                it to disk.
   --image-responses <mode>     whether to send image responses to the client.
-                               Can be "allow", "omit", or "auto". Defaults to
-                               "auto", which sends images if the client can
-                               display them.
+                               Can be "allow" or "omit", Defaults to "allow".
   --no-sandbox                 disable the sandbox for all process types that
                                are normally sandboxed.
   --output-dir <path>          path to the directory for output files.
+  --plugins-folder <path>      path to the plugins directory. Default is
+                               "./plugins".
   --port <port>                port to listen on for SSE transport.
   --proxy-bypass <bypass>      comma-separated domains to bypass proxy, for
                                example ".com,chromium.org,.domain.com"
@@ -328,8 +326,6 @@ Playwright MCP server supports following arguments. They can be provided in the 
                                specified, a temporary directory will be created.
   --viewport-size <size>       specify browser viewport size in pixels, for
                                example "1280, 720"
-  --vision                     Run server that uses screenshots (Aria snapshots
-                               are used by default)
 ```
 
 <!--- End of options generated section -->
@@ -819,6 +815,7 @@ The tools are available in two modes:
   - Parameters:
     - `element` (string): Human-readable element description used to obtain permission to interact with the element
     - `ref` (string): Exact target element reference from the page snapshot
+    - `doubleClick` (boolean, optional): Whether to double click instead of single click
   - Read-only: **false**
 
 <!-- NOTE: This has been generated via update-readme.ts -->
@@ -874,6 +871,19 @@ The tools are available in two modes:
   - Description: Press a key on the keyboard
   - Parameters:
     - `key` (string): Name of the key to press or a character to generate, such as `ArrowLeft` or `a`
+  - Read-only: **false**
+
+<!-- NOTE: This has been generated via update-readme.ts -->
+
+- **browser_type**
+  - Title: Type text
+  - Description: Type text into editable element
+  - Parameters:
+    - `element` (string): Human-readable element description used to obtain permission to interact with the element
+    - `ref` (string): Exact target element reference from the page snapshot
+    - `text` (string): Text to type into the element
+    - `submit` (boolean, optional): Whether to submit entered text (press Enter after)
+    - `slowly` (boolean, optional): Whether to type one character at a time. Useful for triggering key handlers in the page. By default entire text is filled in at once.
   - Read-only: **false**
 
 <!-- NOTE: This has been generated via update-readme.ts -->
@@ -943,7 +953,7 @@ The tools are available in two modes:
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
-- **browser_take_screenshot** ⭐
+- **browser_screen_capture** ⭐
   - Title: Take a screenshot
   - Description: Take a screenshot of the current page. You can't perform actions based on the screenshot, use browser_snapshot for actions.
   - **Enhancement**: Enhanced with fullPage and locator support for flexible screenshot capture
@@ -1077,23 +1087,7 @@ The tools are available in two modes:
 </details>
 
 <details>
-<summary><b>Testing</b></summary>
-
-<!-- NOTE: This has been generated via update-readme.ts -->
-
-- **browser_generate_playwright_test**
-  - Title: Generate a Playwright test
-  - Description: Generate a Playwright test for given scenario
-  - Parameters:
-    - `name` (string): The name of the test
-    - `description` (string): The description of the test
-    - `steps` (array): The steps of the test
-  - Read-only: **true**
-
-</details>
-
-<details>
-<summary><b>Vision mode (Coordinate-based tools)</b></summary>
+<summary><b>Vision mode</b></summary>
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
@@ -1109,7 +1103,7 @@ The tools are available in two modes:
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
-- **browser_screen_move_mouse**
+- **browser_mouse_move_xy**
   - Title: Move mouse
   - Description: Move mouse to a given position
   - Parameters:
@@ -1120,7 +1114,7 @@ The tools are available in two modes:
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
-- **browser_screen_click**
+- **browser_mouse_click_xy**
   - Title: Click
   - Description: Click left mouse button
   - Parameters:
@@ -1131,7 +1125,7 @@ The tools are available in two modes:
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
-- **browser_screen_drag**
+- **browser_mouse_drag_xy**
   - Title: Drag mouse
   - Description: Drag left mouse button
   - Parameters:
@@ -1144,7 +1138,7 @@ The tools are available in two modes:
 
 <!-- NOTE: This has been generated via update-readme.ts -->
 
-- **browser_screen_type**
+- **browser_type**
   - Title: Type text
   - Description: Type text
   - Parameters:
@@ -1152,7 +1146,82 @@ The tools are available in two modes:
     - `submit` (boolean, optional): Whether to submit entered text (press Enter after)
   - Read-only: **false**
 
+<!-- NOTE: This has been generated via update-readme.ts -->
+
+- **browser_press_key**
+  - Title: Press a key
+  - Description: Press a key on the keyboard
+  - Parameters:
+    - `key` (string): Name of the key to press or a character to generate, such as `ArrowLeft` or `a`
+  - Read-only: **false**
+
+<!-- NOTE: This has been generated via update-readme.ts -->
+
+- **browser_type**
+  - Title: Type text
+  - Description: Type text into editable element
+  - Parameters:
+    - `element` (string): Human-readable element description used to obtain permission to interact with the element
+    - `ref` (string): Exact target element reference from the page snapshot
+    - `text` (string): Text to type into the element
+    - `submit` (boolean, optional): Whether to submit entered text (press Enter after)
+    - `slowly` (boolean, optional): Whether to type one character at a time. Useful for triggering key handlers in the page. By default entire text is filled in at once.
+  - Read-only: **false**
+
+<!-- NOTE: This has been generated via update-readme.ts -->
+
+- **browser_wait_for**
+  - Title: Wait for
+  - Description: Wait for text to appear or disappear or a specified time to pass
+  - Parameters:
+    - `time` (number, optional): The time to wait in seconds
+    - `text` (string, optional): The text to wait for
+    - `textGone` (string, optional): The text to wait for to disappear
+  - Read-only: **true**
+
+<!-- NOTE: This has been generated via update-readme.ts -->
+
+- **browser_file_upload**
+  - Title: Upload files
+  - Description: Upload one or multiple files
+  - Parameters:
+    - `paths` (array): The absolute paths to the files to upload. Can be a single file or multiple files.
+  - Read-only: **false**
+
+<!-- NOTE: This has been generated via update-readme.ts -->
+
+- **browser_handle_dialog**
+  - Title: Handle a dialog
+  - Description: Handle a dialog
+  - Parameters:
+    - `accept` (boolean): Whether to accept the dialog.
+    - `promptText` (string, optional): The text of the prompt in case of a prompt dialog.
+  - Read-only: **false**
+
+<!-- NOTE: This has been generated via update-readme.ts -->
+
+- **browser_get_html_content** 🆕
+  - Title: Get HTML content
+  - Description: Get HTML content of the current page or specific elements. Returns full page HTML by default, or HTML of specific elements when locator(s) provided.
+  - **Enhancement**: Extract HTML content from page or specific elements with flexible locator support
+  - Parameters:
+    - `locator` (string, optional): Playwright locator string to get HTML content of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
+    - `locators` (array, optional): Array of Playwright locator strings to get HTML content of multiple elements. Cannot be combined with locator parameter.
+  - Read-only: **true**
+
+<!-- NOTE: This has been generated via update-readme.ts -->
+
+- **browser_get_outer_html** 🆕
+  - Title: Get outer HTML content
+  - Description: Get outer HTML content of specific elements (includes the element tag itself). Requires locator(s) to be specified.
+  - **Enhancement**: Get complete element HTML including the element tag itself
+  - Parameters:
+    - `locator` (string, optional): Playwright locator string to get outer HTML content of a specific element (e.g., "#id", ".class", "text=Hello"). Cannot be combined with locators parameter.
+    - `locators` (array, optional): Array of Playwright locator strings to get outer HTML content of multiple elements. Cannot be combined with locator parameter.
+  - Read-only: **true**
+
 </details>
+
 
 <!--- End of tools generated section -->
 
