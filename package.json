@@ -78,6 +78,7 @@
     "typescript": "^5.8.2"
   },
   "bin": {
-    "mcp-server-playwright": "dist/cli.js"
+    "mcp-server-playwright": "dist/cli.js",
+    "mcp-list-tools": "dist/cli/mcp-list-tools.js"
   }
 }

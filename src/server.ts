@@ -25,10 +25,10 @@ import type { CDPRelay } from './cdp-relay.js';
 
 export class Server {
   readonly config: FullConfig;
-  private _connectionList: Connection[] = [];
-  private _browserConfig: FullConfig['browser'];
-  private _contextFactory: BrowserContextFactory;
-  private _cdpRelay?: CDPRelay;
+  protected _connectionList: Connection[] = [];
+  protected _browserConfig: FullConfig['browser'];
+  protected _contextFactory: BrowserContextFactory;
+  protected _cdpRelay?: CDPRelay;
 
   constructor(config: FullConfig, options: { cdpRelay?: CDPRelay } = {}) {
     this.config = config;

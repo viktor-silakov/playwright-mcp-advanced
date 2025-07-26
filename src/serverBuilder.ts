@@ -25,6 +25,7 @@ import type { z } from 'zod';
 import type { CDPRelay } from './cdp-relay.js';
 import type { BrowserContextFactory } from './browserContextFactory.js';
 import type { FullConfig } from './config.js';
+import type { Connection } from './connection.js';
 
 /**
  * Custom tool definition interface
@@ -132,6 +133,16 @@ export class EnhancedServer extends Server {
 
   setShadowItems(shadowItems: ShadowItems): void {
     this._shadowItems = { ...shadowItems };
+  }
+
+  /**
+   * Override createConnection to use enhanced connection
+   */
+  async createConnection(transport: Transport): Promise<Connection> {
+    const connection = await createConnectionFromEnhancedServer(this, this._contextFactory);
+    this._connectionList.push(connection as any);
+    await connection.server.connect(transport);
+    return connection as any;
   }
 
   /**
