@@ -655,6 +655,42 @@ http.createServer(async (req, res) => {
 
 </details>
 
+## Command Line Utilities
+
+This package includes additional command-line utilities for working with MCP servers:
+
+### 🔍 mcp-list-tools
+
+A utility for discovering and inspecting available tools, resources, and prompts from any MCP server over HTTP.
+
+```bash
+# List all capabilities from default server
+mcp-list-tools
+
+# Connect to custom server
+mcp-list-tools http://localhost:8080/mcp
+
+# Get JSON output for scripting
+mcp-list-tools --format=json
+
+# Show only tools with detailed schemas
+mcp-list-tools --tools-only --detailed
+
+# Show only resources or prompts
+mcp-list-tools --resources-only
+mcp-list-tools --prompts-only
+```
+
+**Key Features:**
+- 🔍 **Discovery**: List all available tools, resources, and prompts
+- 📋 **Detailed Info**: Show input schemas and parameter details with `--detailed`
+- 🎯 **Selective Output**: Filter to show only tools, resources, or prompts
+- 💻 **JSON Support**: Machine-readable output for automation and scripting
+- 🔤 **Icon Legend**: Visual indicators for read-only (🔒) and destructive (⚠️) tools
+- ⚡ **Fast**: Quick inspection without full MCP client setup
+
+📚 **[Complete mcp-list-tools Documentation →](docs/mcp-list-tools.md)**
+
 ## Chrome Extension Mode ✅ **FULLY TESTED & WORKING**
 
 The Chrome Extension mode allows you to connect the MCP server to existing Chrome tabs through a Chrome extension. This feature has been **thoroughly tested and verified working** with complete CDP (Chrome DevTools Protocol) integration.
