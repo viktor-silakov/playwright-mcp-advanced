@@ -33,6 +33,7 @@ import { Context } from './context.js';
 import { getToolsWithPlugins } from './tools.js';
 import { packageJSON } from './package.js';
 import { PluginManager } from './plugins/manager.js';
+import { isShadowed } from './utils/shadowMatcher.js';
 import type { Tool } from './tools/tool.js';
 import type { CustomTool, CustomResource, CustomPrompt, EnhancedServer } from './serverBuilder.js';
 
@@ -146,7 +147,7 @@ export async function createEnhancedConnection(
   // Create visible tools list for ListTools response (exclude shadowed base tools, but keep custom tools)
   // Shadowed tools are hidden from the list but remain callable via direct API calls
   const visibleTools = [
-    ...baseTools.filter(tool => !shadowItems.tools?.includes(tool.schema.name)),
+    ...baseTools.filter(tool => !isShadowed(shadowItems.tools, tool.schema.name)),
     ...convertedCustomTools
   ];
   const context = new Context(allTools, config, browserContextFactory, pluginManager);

@@ -1,6 +1,6 @@
 {
   "name": "playwright-mcp-advanced",
-  "version": "0.0.37",
+  "version": "0.1.0",
   "description": "Advanced Playwright Tools for MCP",
   "keywords": [
     "playwright",
@@ -55,7 +55,7 @@
     "debug": "^4.4.1",
     "mime": "^4.0.7",
     "playwright": "1.53.0",
-    "tsx": "^4.15.1",
+    "tsx": "^4.20.3",
     "ws": "^8.18.1",
     "zod-to-json-schema": "^3.24.4"
   },

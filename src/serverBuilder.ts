@@ -73,11 +73,12 @@ export interface CustomPrompt {
 
 /**
  * Shadow items configuration - hide specific standard tools/prompts/resources
+ * Supports wildcard patterns using '*' (e.g., "browser_*", "*_test", "*middle*")
  */
 export interface ShadowItems {
-  tools?: string[];      // Array of tool names to hide from standard tools
-  prompts?: string[];    // Array of prompt names to hide from standard prompts  
-  resources?: string[];  // Array of resource URIs to hide from standard resources
+  tools?: string[];      // Array of tool names/patterns to hide from standard tools
+  prompts?: string[];    // Array of prompt names/patterns to hide from standard prompts  
+  resources?: string[];  // Array of resource URIs/patterns to hide from standard resources
 }
 
 /**
