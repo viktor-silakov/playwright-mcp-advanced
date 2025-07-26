@@ -99,12 +99,7 @@ export async function createEnhancedConnection(
   const customPrompts = enhancedServer?.getCustomPrompts() || [];
   const shadowItems = enhancedServer?.getShadowItems() || {};
 
-  // Apply shadow filtering to base tools (hide tools that are being shadowed)
-  const filteredBaseTools = baseTools.filter(tool => {
-    return !shadowItems.tools?.includes(tool.schema.name);
-  });
-
-  // Combine filtered base tools with custom tools (convert custom tools to Tool format)
+  // Convert custom tools to Tool format
   const convertedCustomTools: Tool[] = customTools.map(customTool => ({
     capability: customTool.capability as any,
     schema: {
@@ -144,7 +139,16 @@ export async function createEnhancedConnection(
     },
   }));
 
-  const allTools = [...filteredBaseTools, ...convertedCustomTools];
+  // Keep all tools available for execution (base + custom)
+  // This allows shadowed tools to still be called directly if not overridden by custom tools
+  const allTools = [...baseTools, ...convertedCustomTools];
+  
+  // Create visible tools list for ListTools response (exclude shadowed base tools, but keep custom tools)
+  // Shadowed tools are hidden from the list but remain callable via direct API calls
+  const visibleTools = [
+    ...baseTools.filter(tool => !shadowItems.tools?.includes(tool.schema.name)),
+    ...convertedCustomTools
+  ];
   const context = new Context(allTools, config, browserContextFactory, pluginManager);
   
   const server = new McpServer({ name: 'Playwright Enhanced', version: packageJSON.version }, {
@@ -158,7 +162,7 @@ export async function createEnhancedConnection(
   // Set up tool handlers
   server.setRequestHandler(ListToolsRequestSchema, async () => {
     return {
-      tools: allTools.map(tool => ({
+      tools: visibleTools.map(tool => ({
         name: tool.schema.name,
         description: tool.schema.description,
         inputSchema: zodToJsonSchema(tool.schema.inputSchema),
@@ -178,7 +182,14 @@ export async function createEnhancedConnection(
       isError: true,
     });
     
-    const tool = allTools.find(tool => tool.schema.name === request.params.name);
+    // Find tool with priority: custom tools first, then base tools
+    // This allows custom tools to override base tools, even if the base tool is shadowed
+    // Shadowed base tools can still be called if no custom tool with the same name exists
+    let tool = convertedCustomTools.find(tool => tool.schema.name === request.params.name);
+    if (!tool) {
+      tool = baseTools.find(tool => tool.schema.name === request.params.name);
+    }
+    
     if (!tool)
       return errorResult(`Tool "${request.params.name}" not found`);
 

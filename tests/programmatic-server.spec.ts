@@ -407,22 +407,70 @@ test.describe('Programmatic Server Creation', () => {
     const factory = await contextFactory(config);
     const connection = await createEnhancedConnection(config, factory, server);
 
-    // Verify shadowing worked
+    // Verify new shadowing behavior: both standard and custom tools exist for execution
     const allTools = connection.context.tools;
     const navigateTools = allTools.filter(tool => tool.schema.name === 'browser_navigate');
     const backTools = allTools.filter(tool => tool.schema.name === 'browser_navigate_back');
 
-    expect(navigateTools).toHaveLength(1);
-    expect(navigateTools[0].schema.title).toBe('Custom Navigation');
-    expect(backTools).toHaveLength(0); // Should be hidden by shadowItems
+    // Both tools should exist (standard + custom)
+    expect(navigateTools).toHaveLength(2);
+    // One should be the custom tool
+    const customTool = navigateTools.find(tool => tool.schema.title === 'Custom Navigation');
+    expect(customTool).toBeDefined();
+    // One should be the standard tool
+    const standardTool = navigateTools.find(tool => tool.schema.title === 'Navigate to a URL');
+    expect(standardTool).toBeDefined();
+    
+    // Back tool should still exist for execution (shadowing only hides from list, doesn't remove)
+    expect(backTools).toHaveLength(1);
 
-    // Test custom tool execution
-    const result = await navigateTools[0].handle(connection.context, {
-      url: 'https://example.com',
-      customParam: 'test'
-    });
+    // Test that custom tool is executed (has priority)
+    if (customTool) {
+      const result = await customTool.handle(connection.context, {
+        url: 'https://example.com',
+        customParam: 'test'
+      });
 
-    expect(result.resultOverride?.content?.[0]?.text).toContain('Custom navigate to https://example.com');
+      expect(result.resultOverride?.content?.[0]?.text).toContain('Custom navigate to https://example.com');
+    }
+  });
+
+  test('should hide shadowed tools from list but keep them executable', async () => {
+    const server = await createServerBuilder({
+      config: {
+        browser: { headless: true },
+        capabilities: ['vision']
+      },
+      shadowItems: {
+        tools: ['browser_navigate', 'browser_navigate_back'],
+        prompts: [],
+        resources: [],
+      }
+    }).build();
+
+    const config = await resolveConfig({});
+    const factory = await contextFactory(config);
+    const connection = await createEnhancedConnection(config, factory, server);
+
+    // Check that shadowed tools are hidden from the visible list
+    // This would be what ListTools API returns
+    const visibleTools = connection.context.tools.filter(tool => 
+      !server.getShadowItems().tools?.includes(tool.schema.name)
+    );
+    
+    const visibleNavigateTools = visibleTools.filter(tool => tool.schema.name === 'browser_navigate');
+    const visibleBackTools = visibleTools.filter(tool => tool.schema.name === 'browser_navigate_back');
+    
+    expect(visibleNavigateTools).toHaveLength(0); // Hidden from list
+    expect(visibleBackTools).toHaveLength(0); // Hidden from list
+    
+    // But they should still be available for execution in allTools
+    const allTools = connection.context.tools;
+    const allNavigateTools = allTools.filter(tool => tool.schema.name === 'browser_navigate');
+    const allBackTools = allTools.filter(tool => tool.schema.name === 'browser_navigate_back');
+    
+    expect(allNavigateTools).toHaveLength(1); // Available for execution
+    expect(allBackTools).toHaveLength(1); // Available for execution
   });
 
   test('should handle empty shadowItems configuration', async () => {
