@@ -116,11 +116,12 @@ async function main() {
 
     server.setupExitWatchdog();
 
-    const port = process.env.PORT ? parseInt(process.env.PORT) : undefined;
+    const port = process.env.PORT ? parseInt(process.env.PORT) : 3232;
     
     if (port) {
       console.error('🌐 Starting HTTP server mode...');
-      await startHttpServer(server, { port });
+      const httpServer = await startHttpServer({ port });
+      startHttpTransport(httpServer, server);
       
       console.error(`🚀 Server running on http://localhost:${port}`);
       console.error('📋 Custom tools: calculate');
